@@ -37,7 +37,7 @@ class SKIA(DrawingFramework):
         if bg is None:
             bg = {}
         canvas.drawRoundRect(
-            rect=self.skia.Rect.MakeXYWH(rect.x, rect["y"], rect["width"], rect["height"]),
+            rect=self.skia.Rect.MakeXYWH(rect.x, rect.y, rect.width, rect.height),
             rx=radius,
             ry=radius,
             paint=self.skia.Paint(

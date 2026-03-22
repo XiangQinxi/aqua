@@ -1,6 +1,7 @@
 from charmy import Button, Window, mainloop
 
 window1 = Window(size=(300, 400))
+window1.title = "Charmy GUI"
 
 with window1:
     Button().place(0, 0, 100, 100)

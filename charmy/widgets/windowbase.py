@@ -42,31 +42,32 @@ class WindowBase(EventHandling, CharmyObject):
 
         # Init Attributes
         self.ui_draw_func = None
+        self.frameworks = self.cget("frameworks")
         self.drawing_mode = drawing_mode
 
-        match self.cget("ui.framework.name"):
+        match self.frameworks.ui_name:
             case "GLFW":
-                self.glfw = self.cget("ui.framework").glfw
+                self.glfw = self.frameworks.ui.glfw
             case _:
-                raise ValueError(f"Unknown UI Framework: {self.cget('ui.framework.name')}")
+                raise ValueError(f"Unknown UI Framework: {self.frameworks.ui_name}")
 
-        match self.cget("drawing.framework.name"):
+        match self.frameworks.drawing_name:
             case "SKIA":
-                self.skia = self.cget("drawing.framework").skia
+                self.skia = self.frameworks.drawing.skia
                 self.drawing_surface = None
             case _:
                 raise ValueError(
-                    f"Unknown Drawing Framework: {self.cget('drawing.framework.name')}"
+                    f"Unknown Drawing Framework: {self.frameworks.drawing_name}"
                 )
 
-        match self.cget("backend.framework.name"):
+        match self.frameworks.backend_name:
             case "OPENGL":
-                self.opengl = self.cget("backend.framework").opengl
-                self.opengl_GL = self.cget("backend.framework").opengl_GL
+                self.opengl = self.frameworks.backend.opengl
+                self.opengl_GL = self.frameworks.backend.opengl_GL
                 self.backend_context = None
             case _:
                 raise ValueError(
-                    f"Unknown Backend Framework: {self.cget('backend.framework.name')}"
+                    f"Unknown Backend Framework: {self.frameworks.backend_name}"
                 )
 
         self.pos = Pos(0, 0)  # Always (0, 0)
@@ -89,7 +90,7 @@ class WindowBase(EventHandling, CharmyObject):
 
     def create(self):
         """Create the window."""
-        arg = self.cget("ui.framework").create(
+        arg = self.frameworks.ui.create(
             size=self.size,
             title=self.title,
             fha=self.is_force_hardware_acceleration,
@@ -104,7 +105,7 @@ class WindowBase(EventHandling, CharmyObject):
 
     def create_event_bounds(self):
         """Create event bounds."""
-        self.cget("ui.framework").create_event_bounds(the_window=self.the_window, window_class=self)
+        self.frameworks.ui.create_event_bounds(the_window=self.the_window, window_class=self)
 
     def update(self):
         """Update the window. When is_dirty is True, draw the window."""
@@ -189,7 +190,7 @@ class WindowBase(EventHandling, CharmyObject):
             # 【为该窗口设置当前上下文】
             match self.cget("ui.framework.name"):
                 case "GLFW":
-                    self.cget("ui.framework").make_context_current(self.the_window)
+                    self.frameworks.ui.make_context_current(self.the_window)
 
                     match self.cget("drawing.framework.name"):
                         case "SKIA":
@@ -218,7 +219,7 @@ class WindowBase(EventHandling, CharmyObject):
                     sdl2.SDL_UpdateWindowSurface(self.the_window)  # NOQA
 
             if self.is_alive:
-                self.cget("ui.framework").swap_buffers(self.the_window)
+                self.frameworks.ui.swap_buffers(self.the_window)
 
         if self.backend_context:
             self.backend_context.freeGpuResources()
@@ -243,7 +244,7 @@ class WindowBase(EventHandling, CharmyObject):
         # self._event_init = False
         # print(self.id)
         try:
-            self.cget("ui.framework").destroy(the_window=self.the_window)
+            self.frameworks.ui.destroy(the_window=self.the_window)
         except TypeError:
             pass
         finally:
@@ -297,7 +298,7 @@ class WindowBase(EventHandling, CharmyObject):
         Returns:
             None
         """
-        self.cget("ui.framework").set_title(the_window=self.the_window, title=text)
+        self.frameworks.ui.set_title(the_window=self.the_window, title=text)
 
     @property
     def size(self) -> Size:
@@ -317,7 +318,7 @@ class WindowBase(EventHandling, CharmyObject):
         Returns:
             None
         """
-        self.cget("ui.framework").set_size(the_window=self.the_window, size=size)
+        self.frameworks.ui.set_size(the_window=self.the_window, size=size)
 
     def move(self, pos: Pos | tuple[int, int]) -> None:
         """Move the window to the given position.
@@ -327,7 +328,7 @@ class WindowBase(EventHandling, CharmyObject):
         Returns:
             None
         """
-        self.cget("ui.framework").set_pos(the_window=self.the_window, pos=pos)
+        self.frameworks.ui.set_pos(the_window=self.the_window, pos=pos)
 
     # endregion
 

@@ -194,16 +194,27 @@ class GLFW(UIFramework):
         return {"pos": self.glfw.get_window_pos(window), "window": window}
 
     def create_event_bounds(self, the_window, window_class, **kwargs) -> None:
+        """Create event bounds for the window
+
+        Args:
+            the_window: The window to create event bounds for
+            window_class: The window class to create event bounds for
+            **kwargs: Keyword arguments.
+
+        Returns:
+            None
+        """
         # TODO: docstring?
         # TODO: lambda + 没注释 给我请的高人看似了
         # TODO: 函数套函数，我死了
+        # Bind resize event
         self.glfw.set_window_size_callback(
             the_window,
             lambda w, width, height: window_class.trigger(
                 Event(window_class, "resize", width=width, height=height)
             ),
         )
-
+        # Bind move event
         self.glfw.set_window_pos_callback(
             the_window,
             lambda w, root_x, root_y: window_class.trigger(
@@ -212,16 +223,19 @@ class GLFW(UIFramework):
         )
 
         def _enter(w, entered: int):
+            """Handle mouse enter/leave event"""
             if entered:
                 event_type = "mouse_enter"
             else:
                 event_type = "mouse_leave"
             window_class.trigger(Event(window_class, event_type, the_window=w))
 
+        # Bind move event
         self.glfw.set_cursor_enter_callback(
             the_window,
             _enter,
         )
+        # Bind mouse move event
         self.glfw.set_cursor_pos_callback(
             the_window,
             lambda w, x, y: window_class.trigger(
@@ -230,6 +244,7 @@ class GLFW(UIFramework):
         )
 
         def _mouse(w, button, action, mods):  # NOQA
+            """Handle mouse button event"""
             if action == self.glfw.PRESS:
                 event_type = "mouse_press"
             elif action == self.glfw.RELEASE:
@@ -250,6 +265,7 @@ class GLFW(UIFramework):
                 )
             )
 
+        # Bind mouse button event
         self.glfw.set_mouse_button_callback(the_window, _mouse)
 
     def _mods_name(self, _mods, join: str = "+") -> str:

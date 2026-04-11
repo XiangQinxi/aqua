@@ -70,10 +70,10 @@ class WindowBase(EventHandling, CharmyObject):
                     f"Unknown Backend Framework: {self.frameworks.backend_name}"
                 )
 
-        self.pos = Pos(0, 0)  # Always (0, 0)
-        self.canvas_pos = Pos(0, 0)  # Always (0, 0)
-        self.root_pos = Pos(0, 0)  # The position of the window
-        self._size = Size(size[0], size[1])  # The size of the window
+        self.pos = (0, 0)  # Always (0, 0)
+        self.canvas_pos = (0, 0)  # Always (0, 0)
+        self.root_pos = (0, 0)  # The position of the window
+        self._size = (size[0], size[1])  # The size of the window
         self._title = title  # The title of the window
 
         self.is_dirty: bool = True
@@ -96,7 +96,7 @@ class WindowBase(EventHandling, CharmyObject):
             fha=self.is_force_hardware_acceleration,
         )
 
-        _root_point = self.root_pos(arg["pos"][0], arg["pos"][1])
+        _root_point = self.root_pos = (arg["pos"][0], arg["pos"][1])
 
         self.is_visible = True
         self.is_alive = True
@@ -301,7 +301,7 @@ class WindowBase(EventHandling, CharmyObject):
         self.frameworks.ui.set_title(the_window=self.the_window, title=text)
 
     @property
-    def size(self) -> Size:
+    def size(self) -> tuple[int | float, int | float]:
         """Get the size of the window.
 
         Returns:
@@ -341,8 +341,7 @@ class WindowBase(EventHandling, CharmyObject):
             event (Event): The move event.
         """
         _root_point = self.root_pos
-        _root_point.x = event["x_root"]
-        _root_point.y = event["y_root"]
+        _root_point = (event["x_root"], event["y_root"])
 
     def _on_resize(self, event: Event):
         """Handle the resize event.
@@ -350,8 +349,7 @@ class WindowBase(EventHandling, CharmyObject):
         Args:
             event (Event): The resize event.
         """
-        _size = self.size
-        _size(event["width"], event["height"])
+        self.size = (event["width"], event["height"])
         self.dirty()
 
     # endregion

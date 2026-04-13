@@ -15,20 +15,20 @@ class ID(Enum):
     NONE = 1
 
 
-@dataclasses.dataclass
-class Backends:
-    OPENGL = opengl = "OPENGL"
+# @dataclasses.dataclass
+# class Backends:
+#     OPENGL = opengl = "OPENGL"
 
 
-@dataclasses.dataclass
-class UI:
-    GLFW = glfw = "GLFW"
-    SDL = sdl = "SDL"
+# @dataclasses.dataclass
+# class UI:
+#     GLFW = glfw = "GLFW"
+#     SDL = sdl = "SDL"
 
 
-@dataclasses.dataclass
-class Drawing:
-    SKIA = skia = "SKIA"
+# @dataclasses.dataclass
+# class Drawing:
+#     SKIA = skia = "SKIA"
 
 
 class DrawingMode(Enum):

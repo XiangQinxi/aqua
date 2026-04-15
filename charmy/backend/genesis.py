@@ -22,6 +22,8 @@ class Backend(template.Backend):
         self.friendly_name = "Genesis (early development)"
         self.version = "0.1.0"
         self.author = ["XiangQinXi", "rgzz666"]
+
+        self.class_WindowBase = WindowBase
     
     def init(self, **kwargs) -> None:
         if not glfw.init():
@@ -39,7 +41,6 @@ class Backend(template.Backend):
 
         if kwargs.get("error_callback", None):
             glfw.set_error_callback(kwargs["error_callback"])
-
 
 
 @dataclass

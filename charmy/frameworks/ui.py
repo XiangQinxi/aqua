@@ -204,6 +204,8 @@ class GLFW(UIFramework):
         Returns:
             None
         """
+        # @XiangQinxi !!!! WTF is this function??????????   —— rgzz666 @26/04/15
+
         # TODO: docstring?
         # TODO: lambda + 没注释 给我请的高人看似了
         # TODO: 函数套函数，我死了

@@ -1,21 +1,36 @@
-from ..const import Backends
+import typing
+
 from ..rect import Rect
 from .container import Container
-from .windowbase import WindowBase
+from .. import const
 
+if typing.TYPE_CHECKING:
+    from ..cmm import CharmyManager
 
-class Window(WindowBase, Container):
+class Window(Container):
     """Window class."""
 
-    def __init__(self, *args, **kwargs):
-        WindowBase.__init__(self, *args, **kwargs)
-        match self.cget("drawing.framework.name"):
-            case "SKIA":
-                self.ui_draw_func = self.skia_draw_func
-                # When `draw` is called, trigger `ui_draw_func`
-
-    # TODO: why specific drawing frame?
-    def skia_draw_func(self, canvas):
-        """Draw function for Skia."""
-        canvas.clear(self.skia.ColorGRAY)
-        self.draw_children(canvas)
+    def __init__(self, 
+                 parent: CharmyManager | None = None, 
+                 size: tuple[int | float, int | float] = (540, 480), 
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Store parent maanger
+        if parent != None: # Parent manager already specified
+            self.parent = parent
+        else:
+            if not const.Configs.single_manager_mode:
+                raise RuntimeError(
+                    "No manager specified for window, while single manager mode is off. "
+                    )
+            self.parent = const.Common.managers_instances[0]
+        # Handle size
+        self.size = size
+        if type(self.size[0]) is float or type(self.size[1]) is float:
+            self.size = (int(self.size[0]), int(self.size[1]))
+        # Initialize the WindowBase
+        self.backend_base = self.parent.backend.class_WindowBase()
+        self.show()
+    
+    def show(self):
+        self.backend_base.show()

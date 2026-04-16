@@ -8,7 +8,8 @@
 
 from dataclasses import dataclass
 import glfw
-import skia
+# import skia
+import sys
 
 from . import template
 
@@ -36,7 +37,7 @@ class Backend(template.Backend):
         # TODO: combine them?
         glfw.window_hint(glfw.SAMPLES, kwargs.get("samples", 4))
 
-        if PLATFORM == "windows":
+        if sys.platform == "win32":
             glfw.window_hint(glfw.WIN32_KEYBOARD_MENU, True)
 
         if kwargs.get("error_callback", None):
@@ -72,14 +73,14 @@ class WindowBase(template.WindowBase):
         glfw.window_hint(glfw.STENCIL_BITS, 8)
 
         # see https://www.glfw.org/faq#macos
-        if PLATFORM == "macos":
+        if sys.platform == "darwin":
             glfw.window_hint(glfw.COCOA_RETINA_FRAMEBUFFER, glfw.TRUE)
             glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, True)
         else:  # Windows / Linux
             glfw.window_hint(glfw.SCALE_TO_MONITOR, glfw.TRUE)
 
         glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
-        glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 2 if PLATFORM == "macos" else 3)
+        glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 2 if sys.platform == "darwin" else 3)
 
         glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
 

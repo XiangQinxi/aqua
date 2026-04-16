@@ -17,6 +17,9 @@ class Backend():
         self.version = "0.0.0"
         self.author = []
 
+        # Make alias for WhateverBase classes
+        self.class_WindowBase = WindowBase
+
         # Make placeholders for APIs
         func = self.placeholder_function # Just for aliasing
 

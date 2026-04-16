@@ -1,6 +1,6 @@
 import typing
 
-from ..const import Drawing
+# from ..const import Drawing
 from ..object import CharmyObject
 
 

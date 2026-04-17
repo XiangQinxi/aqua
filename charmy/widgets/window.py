@@ -32,5 +32,20 @@ class Window(Container):
         self.backend_base = self.parent.backend.class_WindowBase()
         self.show()
     
-    def show(self):
+    def show(self) -> Window:
+        """Show the window.
+        
+        Returns:
+            self: The window itself
+        """
         self.backend_base.show()
+        return self
+    
+    def title(self, new: str) -> Window:
+        """Set title of the window.
+        
+        Returns:
+            self: The window itself
+        """
+        self.backend_base.title = new
+        return self

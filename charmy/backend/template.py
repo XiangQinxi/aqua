@@ -68,13 +68,17 @@ class WindowBase():
         # And no need to perform any action to a dummy window
 
     def show(self):
-        """Shows the window, although not supported in nobackend so will raise an error."""
+        """Shows the window, does nothing on dummy window."""
+        return None
+    
+    def hide(self):
+        """Hides the window, does nothing on a dummy window."""
+        return None
+    
+    def update(self):
+        """Updates the window, although not supported in nobackend and will throw an error"""
         raise NotImplementedError(
             "nobackend is not a valid backend to make Charmy works. "
             "You must install another backend that supports your system GUI.\n"
             "Hint: If you already specified another backend, this means that backend is invalid."
         )
-    
-    def hide(self):
-        """Hides the window, does nothing on a dummy window."""
-        return None

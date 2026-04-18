@@ -28,10 +28,10 @@ class CharmyManager(CharmyObject):
         """
         super().__init__(**kwargs)
 
-        if type(backend) is str:
-            self.backend = backend_loader.load_backend(backend)()
+        if isinstance(backend, str):
+            self.backend: Backend = backend_loader.load_backend(backend)()
         else:
-            self.backend=backend
+            self.backend: Backend = backend
 
         self.windows=[] # This list stores all windows this CharmyManager manages
         self.is_alive = True # This var stores if the manager is still alive

@@ -39,15 +39,6 @@ class Window(Container):
         self.backend_base = self.parent.backend.WindowBase()
         self.show()
 
-    def show(self) -> Window:
-        """Show the window.
-        
-        Returns:
-            self: The window itself
-        """
-        self.backend_base.show()
-        return self
-
     @property
     def title(self) -> str:
         return self._title
@@ -62,3 +53,15 @@ class Window(Container):
         self.backend_base.title = new
         self._title = new
         return self
+
+    def show(self) -> Window:
+        """Show the window.
+        
+        Returns:
+            self: The window itself
+        """
+        self.backend_base.show()
+        return self
+    
+    def update(self):
+        self.backend_base.update()

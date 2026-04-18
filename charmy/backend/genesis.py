@@ -92,3 +92,5 @@ class WindowBase(template.WindowBase):
     
     def show(self):
         glfw.show_window(self.window)
+
+    @title.setter

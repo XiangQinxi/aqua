@@ -7,6 +7,11 @@ import warnings
 # ChatGPT says that my framework is good.   —— rgzz666 @2026/04/15
 
 
+def _placeholder_function(*args, backend_name: str = "currently used", **kwargs) -> bool:
+    warnings.warn(f"This function is not implemented in backend {backend_name}.")
+    return False
+
+
 class Backend():
     """This is a template of Backend, does not have any actual function."""
 
@@ -22,10 +27,6 @@ class Backend():
     
     def backend_init(self):
         return None
-
-    def placeholder_function(self, *args, **kwargs) -> bool:
-        warnings.warn(f"This function is not implemented in backend {self.friendly_name}.")
-        return False
 
 
 @dataclass
@@ -85,3 +86,6 @@ class WindowBase():
             "You must install another backend that supports your system GUI.\n"
             "Hint: If you already specified another backend, this means that backend is invalid."
         )
+    
+    def set_title(self, new: str):
+        _placeholder_function()

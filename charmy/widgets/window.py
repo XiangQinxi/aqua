@@ -54,7 +54,7 @@ class Window(Container):
         Returns:
             self: The window itself
         """
-        self.backend_base.title = new
+        self.backend_base.set_title(new)
         self._title = new
         return self
 

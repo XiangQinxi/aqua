@@ -10,7 +10,13 @@ Charmy is still under development, you may motivate us and boost this process by
 
 We (The development team members) discuss our latest progress and the next steps in a QQ group chat, which many other Chinese developers also do. Anyone who is interested in (or even better, willing to contribute to) this project will be welcomed to join. The group chat number is: `887102507` .
 
-**For anyone outside China:** Unfortunately, we currently have no other discussion group chat on any other platforms that you may be easier to access. We will create one when we publish our first usable version, because there is no reason to do so before that. **However,** the good news is, it is possible for international users to own a QQ account, you may sign up for QQ if you'd wish, and I'm sure that you will be welcomed by all China Mainland netizens!
+Please DO NOT create issues irrelevant to software bugs or suggestions etc. in this repository, contact us directly in that case.
+
+### For anyone outside China
+
+Unfortunately, we currently have no other discussion group chat on any other platforms that you may be easier to access. We will create one when we publish our first usable version, because there is no reason to do so before that. **However,** the good news is, it is possible for international users to own a QQ account, you may sign up for QQ if you'd wish, and I'm sure that you will be welcomed by all China Mainland netizens! 
+
+**Another good new is: ** I (totowang-hhh / rgzz666) can communicate in English (and that's why I was the one who wrote this README), so feel free to reach me via any method possible. For instance, simply email me (tt1224@hotmail.com) for further discussion.
 
 ## The Genesis Backend
 

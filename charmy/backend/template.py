@@ -19,6 +19,9 @@ class Backend():
 
         # Make alias for WhateverBase classes
         self.WindowBase = WindowBase
+    
+    def backend_init(self):
+        return None
 
     def placeholder_function(self, *args, **kwargs) -> bool:
         warnings.warn(f"This function is not implemented in backend {self.friendly_name}.")

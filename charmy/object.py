@@ -41,7 +41,7 @@ class CharmyObject(metaclass=InstanceCounterMeta):
     objects_sorted: typing.Dict[str, dict[str, CharmyObject]] = (
         {}
     )  # find by class name {OBJ1: {1: OBJECT1, 2: OBJECT2}}
-    instances: dict[str, typing.Self] = {}
+    instances: dict[str, typing.Self]
     attributes: typing.Dict[str, typing.Any] = {}  # public attributes {key: value}
 
     def __init__(self, id_: ID | str = ID.AUTO):
@@ -72,7 +72,11 @@ class CharmyObject(metaclass=InstanceCounterMeta):
             else:
                 self.objects_sorted[self.class_name][self.id] = self
             
-            type(self).instances[self.id] = self
+            self.__class__.instances[self.id] = self
+
+    def __init_subclass__(cls):
+        super().__init_subclass__()
+        cls.instances = {}
 
     # region: Properties
 

@@ -26,7 +26,7 @@ class Backend(template.Backend):
 
         self.WindowBase = WindowBase
     
-    def init(self, **kwargs) -> None:
+    def backend_init(self, **kwargs) -> None:
         if not glfw.init():
             raise glfw.GLFWError("GLFW init failed")
 

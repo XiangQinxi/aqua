@@ -32,6 +32,8 @@ class CharmyManager(CharmyObject):
             self.backend: Backend = backend_loader.load_backend(backend)()
         else:
             self.backend: Backend = backend
+        
+        self.backend.backend_init()
 
         self.windows=[] # This list stores all windows this CharmyManager manages
         self.is_alive = True # This var stores if the manager is still alive
@@ -207,7 +209,7 @@ class CharmyManager(CharmyObject):
 def mainloop() -> None:
     """Start main loop."""
     while True:
-        for manager in CharmyManager.objects.values():
+        for manager in CharmyManager.instances.values():
             manager.update()
 
 

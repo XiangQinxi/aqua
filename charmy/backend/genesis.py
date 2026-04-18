@@ -50,7 +50,7 @@ class WindowSupportState(template.WindowSupportState):
     set_title               = True
     set_icon                = True
     resize                  = True
-    set_scale_mode          = True
+    set_scale_mode          = False
     set_background          = True
     translucent             = True
     set_state               = True
@@ -90,7 +90,17 @@ class WindowBase(template.WindowBase):
         if self.window == None:
             raise RuntimeError("Can't create window")
     
-    def show(self):
+    def show(self) -> WindowBase:
         glfw.show_window(self.window)
+        return self
 
-    @title.setter
+    def set_title(self, new: str) -> WindowBase:
+        glfw.set_window_title(self.window, new)
+        return self
+    
+    def update(self):
+        """Update the window."""
+        self.draw_frame()
+
+    def draw_frame(self) -> None:
+        pass

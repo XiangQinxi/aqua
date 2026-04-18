@@ -15,7 +15,7 @@
 
 """A modern GUI library."""
 
-from .cmm import cquit, mainloop, manager
+from .cmm import cquit, mainloop
 from .const import *
 
 from . import backend

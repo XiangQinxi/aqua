@@ -5,6 +5,10 @@ from .container import Container
 from .. import const
 from ..cmm import CharmyManager
 
+if typing.TYPE_CHECKING:
+    from ..backend.template import WindowBase
+
+
 class Window(Container):
     """Window class."""
 
@@ -17,14 +21,14 @@ class Window(Container):
         super().__init__(*args, **kwargs)
         # Store parent maanger
         if parent != None: # Parent manager already specified
-            self.parent = parent
-        elif len(CharmyManager.objects.values()) == 1: # Only one manager present
-            self.parent = list(CharmyManager.objects.values())[0]
+            self.parent: CharmyManager = parent
+        elif len(CharmyManager.instances.values()) == 1: # Only one manager present
+            self.parent: CharmyManager = list(CharmyManager.instances.values())[0]
         else:
             if len(const.Common.managers_instances) == 0:
                 # If no manager present, create a default
                 from ..backend import loader
-                self.parent = CharmyManager(const.Configs.default_backend)
+                self.parent: CharmyManager = CharmyManager(const.Configs.default_backend)
             else:
                 raise RuntimeError(
                     "No manager specified for window, while multiple managers present."
@@ -36,7 +40,7 @@ class Window(Container):
         # Window title
         self._title = title
         # Initialize the WindowBase
-        self.backend_base = self.parent.backend.WindowBase()
+        self.backend_base: WindowBase = self.parent.backend.WindowBase()
         self.show()
 
     @property

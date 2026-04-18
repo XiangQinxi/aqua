@@ -37,10 +37,11 @@ class CharmyObject(metaclass=InstanceCounterMeta):
         id: ID for the object
     """
 
-    objects: typing.Dict[str, typing.Any] = {}  # find by ID {1: OBJ1, 2: OBJ2}
-    objects_sorted: typing.Dict[str, typing.Any] = (
+    # objects: typing.Dict[str, CharmyObject] = {}  # find by ID {1: OBJ1, 2: OBJ2}
+    objects_sorted: typing.Dict[str, dict[str, CharmyObject]] = (
         {}
     )  # find by class name {OBJ1: {1: OBJECT1, 2: OBJECT2}}
+    instances: dict[str, typing.Self] = {}
     attributes: typing.Dict[str, typing.Any] = {}  # public attributes {key: value}
 
     def __init__(self, id_: ID | str = ID.AUTO):
@@ -61,16 +62,17 @@ class CharmyObject(metaclass=InstanceCounterMeta):
         if id_ == ID.AUTO:
             id_prefix = self.class_name
             id_ = id_prefix + str(self.instance_count)
-        if id_ in self.objects:
+        if  any(id_ in cls_instances for cls_instances in CharmyObject.objects_sorted.values()):
             raise KeyError(id_)
         if id_ != ID.NONE:
-            self.objects[id_] = self
             self.id: typing.Final[str] = id_  # Do not change after initialization
 
             if self.class_name not in self.objects_sorted:
                 self.objects_sorted[self.class_name] = {self.id: self}
             else:
                 self.objects_sorted[self.class_name][self.id] = self
+            
+            type(self).instances[self.id] = self
 
     # region: Properties
 
@@ -79,13 +81,13 @@ class CharmyObject(metaclass=InstanceCounterMeta):
         """Returns class name."""
         return self.__class__.__name__
 
-    @property
-    def instances(self):
-        """Returns all class instances."""
-        return self.__class__.objects_sorted[self.class_name]
+    # @property
+    # def instances(self) -> typing.Self:
+    #     """Returns all class instances."""
+    #     return self.__class__.objects_sorted[self.class_name]
 
     @property
-    def instance_count(self):
+    def instance_count(self) -> int:
         """Returns the class instance count."""
         return len(self._instances)
 
@@ -95,9 +97,10 @@ class CharmyObject(metaclass=InstanceCounterMeta):
 
     def get_obj(self, target_id: str, default=None) -> typing.Any | None:
         """Get registered object by id. (If not found, return default)"""
-        try:
-            return self.__class__.objects[target_id]
-        except KeyError:
+        for cls_instances in CharmyObject.objects_sorted.values():
+            if target_id in cls_instances.keys():
+                return cls_instances[target_id]
+        else:
             return default
 
     find = get_obj

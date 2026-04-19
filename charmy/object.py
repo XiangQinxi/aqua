@@ -1,10 +1,10 @@
 """
 Basic object class.
 """
+from __future__ import annotations as _
 
 import typing
 import weakref
-
 from .const import ID
 
 
@@ -38,7 +38,7 @@ class CharmyObject(metaclass=InstanceCounterMeta):
     """
 
     # objects: typing.Dict[str, CharmyObject] = {}  # find by ID {1: OBJ1, 2: OBJ2}
-    objects_sorted: typing.Dict[str, dict[str, typing.Self]] = (
+    objects_sorted: typing.Dict[str, dict[str, CharmyObject]] = (
         {}
     )  # find by class name {OBJ1: {1: OBJECT1, 2: OBJECT2}}
     instances: dict[str, typing.Self]

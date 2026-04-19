@@ -1,4 +1,6 @@
 """Charmy constants."""
+from __future__ import annotations as _
+
 import typing
 import dataclasses
 # import sys
@@ -16,7 +18,7 @@ class Configs:
 
 
 class Common:
-    managers_instances: list["cmm.CharmyManager"] = []
+    managers_instances: list[cmm.CharmyManager] = []
 
 
 class ID(Enum):

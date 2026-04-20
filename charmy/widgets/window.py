@@ -25,7 +25,7 @@ class Window(Container):
         elif len(CharmyManager.instances.values()) == 1: # Only one manager present
             self.parent: CharmyManager = list(CharmyManager.instances.values())[0]
         else:
-            if len(const.Common.managers_instances) == 0:
+            if len(CharmyManager.instances) == 0:
                 # If no manager present, create a default
                 from ..backend import loader
                 self.parent: CharmyManager = CharmyManager(const.Configs.default_backend)
@@ -33,12 +33,16 @@ class Window(Container):
                 raise RuntimeError(
                     "No manager specified for window, while multiple managers present."
                     )
+        self.parent.windows.append(self)
         # Handle size
         self.size = size
         if type(self.size[0]) is float or type(self.size[1]) is float:
             self.size = (int(self.size[0]), int(self.size[1]))
         # Window title
         self._title = title
+        # Other flags
+        self.visible = True
+        self._alive = True
         # Initialize the WindowBase
         self.backend_base: WindowBase = self.parent.backend.WindowBase()
         self.show()

@@ -9,6 +9,7 @@ from .object import CharmyObject
 
 if typing.TYPE_CHECKING:
     from .backend.template import Backend
+    from . import window
 
 
 class GLFWError(Exception):
@@ -35,12 +36,12 @@ class CharmyManager(CharmyObject):
         
         self.backend.backend_init()
 
-        self.windows=[] # This list stores all windows this CharmyManager manages
+        self.windows: list[window.Window] = [] # Stores all windows this CharmyManager manages
         self.is_alive = True # This var stores if the manager is still alive
 
     def update(self):
         for window in self.windows:
-            if window.is_visible and window.is_alive:
+            if window.visible and window._alive:
                 window.update()
 
 
@@ -87,38 +88,38 @@ class CharmyManager(CharmyObject):
 #         """According to attribute `ui.framework` to init ui framework"""
 #         self.cget("ui.framework").init(error_callback=self.error, samples=self.cget("ui.samples"))
 
-#     def update(self):
-#         """Update the Windows' UI and events"""
+#    def update(self):
+#        """Update the Windows' UI and events"""
 
-#         self.glfw = self.cget("ui.framework").glfw
-#         self.glfw.wait_events()
+#        self.glfw = self.cget("ui.framework").glfw
+#        self.glfw.wait_events()
 
-#         for window in self.cget("ui.windows"):
-#             if window.is_visible and window.is_alive:
-#                 window.update()
+#        for window in self.cget("ui.windows"):
+#            if window.is_visible and window.is_alive:
+#                window.update()
 
-#         # TODO: 能不能换个地方？比如说framework.py?
-#         # TODO: CharmyManager过度耦合glfw, 没有考虑其他框架
-#         #       是的我来修正这个问题了！ —— 2026/04/14 rgzz666
+#        # TODO: 能不能换个地方？比如说framework.py?
+#        # TODO: CharmyManager过度耦合glfw, 没有考虑其他框架
+#        #       是的我来修正这个问题了！ —— 2026/04/14 rgzz666
 
-#         windows = self.cget("ui.windows")
-#         if windows:
-#             first_alive_window = next((w for w in windows if w.is_visible and w.is_alive), None)
-#             if first_alive_window:
-#                 self.glfw.make_context_current(first_alive_window.the_window)
+#        windows = self.cget("ui.windows")
+#        if windows:
+#            first_alive_window = next((w for w in windows if w.is_visible and w.is_alive), None)
+#            if first_alive_window:
+#                self.glfw.make_context_current(first_alive_window.the_window)
 
-#             self.glfw.swap_interval(1 if self.cget("ui.is_vsync") else 0)  # 是否启用垂直同步
+#            self.glfw.swap_interval(1 if self.cget("ui.is_vsync") else 0)  # 是否启用垂直同步
 
-#         # not implemented yet
-#         # input_mode: bool = True
+#        # not implemented yet
+#        # input_mode: bool = True
 
-#         # if input_mode:
-#         #    self.glfw.poll_events()
-#         # else:
-#         #    # if self._check_delay_events()
-#         #    self.glfw.wait_events()
+#        # if input_mode:
+#        #    self.glfw.poll_events()
+#        # else:
+#        #    # if self._check_delay_events()
+#        #    self.glfw.wait_events()
 
-#         self.glfw.wait_events()
+#        self.glfw.wait_events()
 
 #     def mainloop(self):
 #         """Start mainloop.

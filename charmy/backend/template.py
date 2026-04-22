@@ -92,7 +92,12 @@ class WindowBase():
             "Hint: If you already specified another backend, this means that backend is invalid."
         )
     
+    def draw_frame(self) -> None:
+        """Draw a frameon window, does nothing on a dummy."""
+        placeholder_function(Backend.friendly_name)
+    
     def set_title(self, new: str) -> typing.Self:
+        """Set title to window, does nothing on dummy"""
         placeholder_function(Backend.friendly_name)
         return self
 
@@ -125,7 +130,7 @@ class Shape():
 @dataclass
 class TextureSupportState(SupportState):
     color           : bool = False
-    blur            : bool = False
+    filter          : bool = False
     image           : bool = False
     func_shader     : bool = False
 

@@ -13,8 +13,12 @@ dependencies = [
 license = "Apache 2.0"
 
 [tool.poetry.extras]
-docs = ["myst-parser", "sphinx-design", "furo", "sphinx-copybutton", "sphinx", "sphinxcontrib-mermaid"]
-basic = ["skia-python", "glfw", "pyopengl"]
+docs = [
+    "myst-parser", "sphinx-design", "furo", "sphinx-copybutton", "sphinx", "sphinxcontrib-mermaid", 
+    ]
+basic = [
+    "pysdl2", "pysdl2-dll", "pycairo"
+    ]
 
 [tool.poetry]
 packages = [{include = "charmy"}]

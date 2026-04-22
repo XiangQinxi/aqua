@@ -12,7 +12,6 @@ from dataclasses import dataclass
 import sdl2
 import sdl2.ext
 import cairo
-import rsvg
 import sys
 import ctypes
 

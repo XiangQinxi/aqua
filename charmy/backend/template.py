@@ -7,7 +7,7 @@ import warnings
 # ChatGPT says that my framework is good.   —— rgzz666 @2026/04/15
 
 
-def placeholder_function(*args, backend_name: str = "currently used", **kwargs) -> bool:
+def placeholder_function(backend_name: str = "currently used", **kwargs) -> bool:
     warnings.warn(f"This function is not implemented in backend {backend_name}.")
     return False
 
@@ -24,8 +24,8 @@ class Backend():
         """APIs are aliased here."""
         # Make alias for WhateverBase classes
         self.WindowBase = WindowBase
-        self.Shape = Shape
-        self.Texture = Texture
+        self.LineBase = LineBase
+        self.TextureBase = TextureBase
     
     def backend_init(self) -> None:
         return None
@@ -59,10 +59,11 @@ class WindowSupportState(SupportState):
 
 class WindowBase():
     """Base of the windows, abstracts window-level operations from the base UI lib."""
+
+    supports: WindowSupportState = WindowSupportState()
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes the dummy window"""
-        self.supports: WindowSupportState = WindowSupportState()
 
         self.title: str = "Charmy Dummy Window"
         self.icon: bytearray | None = None
@@ -87,7 +88,7 @@ class WindowBase():
     def update(self) -> None:
         """Updates the window, although not supported in nobackend and will throw an error"""
         raise NotImplementedError(
-            "nobackend is not a valid backend to make Charmy works. "
+            f"{Backend.friendly_name} is not a valid backend to make Charmy work. "
             "You must install another backend that supports your system GUI.\n"
             "Hint: If you already specified another backend, this means that backend is invalid."
         )
@@ -103,30 +104,50 @@ class WindowBase():
 
 
 @dataclass
-class ShapeSupportState(SupportState):
+class LineSupportState(SupportState):
     """Represents support states of shapes of this backend."""
-    polygon         : bool = False
-    round_rect      : bool = False
-    oval            : bool = False
-    beizer_curve    : bool = False
-    svg             : bool = False
-    func_shape      : bool = False
+    polyline        : bool = False
+    arc             : bool = False
+    beizer          : bool = False
 
-class Shape():
-    """Represent a shape in backend layer that can be drawn on window."""
+class LineBase():
+    """Represents a line in backend layer"""
+
+    supports: LineSupportState = LineSupportState()
 
     def __init__(self, 
-                 shape_type: str, 
-                 shape_params: dict[str, typing.Any], 
-                 pos: tuple[int, int] = (0, 0), 
-                 texture: Texture | str | tuple[int, int, int] = "#00ff00", 
-                 ):
-        self.supports: ShapeSupportState = ShapeSupportState()
+                 line_type: str, 
+                 points: list[tuple[int, int]], 
+                 ) -> None:
+        """To represent a drawable line in backend. 
+        
+        Args:
+            line_type: Type of the line
+            points: List of the points on line
+        """
+        self.line_type: str = line_type
+        self.points: list[tuple[int, int]] = points
 
-        self.type: str = shape_type
-        self.shape_params: dict[str, typing.Any] = shape_params
-        self.pos: tuple[int, int] = pos
-        self.texture: Texture | str | tuple[int, int, int] = texture
+    def draw(self):
+        placeholder_function(Backend.friendly_name)
+
+
+
+# class Shape():
+#     """Represent a shape in backend layer that can be drawn on window."""
+
+#     def __init__(self, 
+#                  shape_type: str, 
+#                  shape_params: dict[str, typing.Any], 
+#                  pos: tuple[int, int] = (0, 0), 
+#                  texture: Texture | str | tuple[int, int, int] = "#00ff00", 
+#                  ):
+#         self.supports: ShapeSupportState = ShapeSupportState()
+
+#         self.type: str = shape_type
+#         self.shape_params: dict[str, typing.Any] = shape_params
+#         self.pos: tuple[int, int] = pos
+#         self.texture: Texture | str | tuple[int, int, int] = texture
 
 
 @dataclass
@@ -136,5 +157,5 @@ class TextureSupportState(SupportState):
     image           : bool = False
     func_shader     : bool = False
 
-class Texture():
+class TextureBase():
     pass

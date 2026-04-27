@@ -1,6 +1,7 @@
 import typing
 
 import warnings
+from dataclasses import dataclass
 
 from ..object import CharmyObject
 
@@ -11,68 +12,159 @@ if typing.TYPE_CHECKING:
 
 # region Lines
 
+@dataclass
 class LinePath(CharmyObject):
     """Base class of all line paths"""
 
-    def __init__(self, points: list[tuple[int, int]]):
-        """Initialize the line.
-
-        Args:
-            points: List of points that determines the line.
-        """
-        super().__init__()
-
-        self.type: str = "line_path_class"
-        self.points: list[tuple[int, int]] = points
+    type: typing.ClassVar[str] = "line_path_class"
 
     def draw(self, window: Window):
         """Draw the line."""
+        backend = window.backend_base.backend
+        # 👆 Alias to avoid path to backend properties getting too long. 😅
         if self.type == "line_path_class":
             raise TypeError("LinePath class is a template, cannot be drawn.")
         else:
-            if self.type in window.backend_base.backend.LineBase.supports:
+            if self.type in backend.LineBase.supports:
                 # If supported by the windows' backend.
                 NotImplemented
             else:
                 warnings.warn(f"Line type {self.type} is not supported by "
-                              "backend {self.backend.friendly_name}")
+                              f"backend {backend.friendly_name}")
+
+    @property
+    def start_point(self) -> tuple[int, int]:
+        raise NotImplementedError
+
+    @property
+    def end_point(self) -> tuple[int, int]:
+        raise NotImplementedError
 
 
+@dataclass
+class Line(LinePath):
+    """Represents lines.
+
+    Args:
+        points: List of the 2 points that determines the line
+    """
+    type: typing.ClassVar[str] = "line"
+    points: list[tuple[int, int]]
+
+    def __post_init__(self):
+        if len(self.points) != 2:
+            raise ValueError("A line must be defined with and only with 2 points.")
+
+    @property
+    def start_point(self) -> tuple[int, int]:
+        return self.points[0]
+
+    @property
+    def end_point(self) -> tuple[int, int]:
+        return self.points[-1]
+
+@dataclass
 class PolyLine(LinePath):
-    """Represents polylines."""
+    """Represents polylines.
 
-    def __init__(self, **kwargs):
-        """To create a polyline.
+    Args:
+        points: List of points that determines the line(s)
+    """
+    type: typing.ClassVar[str] = "polyline"
+    points: list[tuple[int, int]]
 
-        Args:
-            points: List of points that determines the line.
-        """
-        super().__init__(**kwargs)
-        self.type = "polyline"
+    def __post_init__(self):
+        if len(self.points) <= 1:
+            raise ValueError("At least 2 points are required to form a (poly)line.")
+        elif len(self.points) == 2:
+            warnings.warn(
+                "Consider using Line for exactly 2 points (although using PolyLine still works).",
+                stacklevel=2
+            )
 
-class Arc(LinePath):
-    """Represents arcs."""
+    @property
+    def start_point(self) -> tuple[int, int]:
+        return self.points[0]
 
-    def __init__(self, **kwargs):
-        """To create an arc.
+    @property
+    def end_point(self) -> tuple[int, int]:
+        return self.points[-1]
 
-        Args:
-            points: List of points that determines the line.
-        """
-        super().__init__(**kwargs)
-        self.type = "arc"
+@dataclass
+class CircleArc(LinePath):
+    """Represents circle arcs.
 
-class Beizer(LinePath):
-    """Represents arcs."""
+    Args:
+        center: Coordinates of the center of the circle
+        radius: Radius of the circle, in integer
+        start_orient: Starting orientation in integer degrees
+        end_orient: Ending orientation in integer degrees
+    """
+    center: tuple[int, int]
+    type: typing.ClassVar[str] = "circle_arc"
+    radius: int
+    start_orient: int
+    end_orient: int
 
-    def __init__(self, **kwargs):
-        """To create a Beizer curve.
+@dataclass
+class EllipseArc(LinePath):
+    """Represents arcs trimmed from ellipses.
 
-        Args:
-            points: List of points that determines the line.
-        """
-        super().__init__(**kwargs)
-        self.type = "beizer"
+    Args:
+        center: Coordinates of the center of the oval
+        v_radius: Vertical radius in integer
+        h_radius: Horizontal radius in integer
+        rotation: Rotation in integer degrees
+        start_orient: Starting orientation in integer degrees
+        end_orient: Ending orientation in integer degrees
+    """
+    center: tuple[int, int]
+    type: typing.ClassVar[str] = "ellipse_arc"
+    v_radius: int
+    h_radius: int
+    rotation: int
+    start_orient: int
+    end_orient: int
+
+    def __post_init__(self):
+        if not -360 < self.rotation < 360:
+            self.rotation = self.rotation % 360
+
+@dataclass
+class QuadraticBezier(LinePath):
+    """Represents quadratic Bezier curves."""
+    type: typing.ClassVar[str] = "quadratic_bezier"
+    points: list[tuple[int, int]]
+
+    def __post_init__(self):
+        if len(self.points) != 3:
+            raise ValueError("Quadratic Bezier curves must be defined with and only with 3 points!")
+
+    @property
+    def start_point(self) -> tuple[int, int]:
+        return self.points[0]
+
+    @property
+    def end_point(self) -> tuple[int, int]:
+        return self.points[-1]
+
+@dataclass
+class CubicBezier(LinePath):
+    """Represents cubic Bezier curves."""
+    type: typing.ClassVar[str] = "cubic_bezier"
+    points: list[tuple[int, int]]
+
+    def __post_init__(self):
+        if len(self.points) != 4:
+            raise ValueError("Cubic Bezier curves must be defined with and only with 4 points!")
+
+    @property
+    def start_point(self) -> tuple[int, int]:
+        return self.points[0]
+
+    @property
+    def end_point(self) -> tuple[int, int]:
+        return self.points[-1]
 
 # endregion
 

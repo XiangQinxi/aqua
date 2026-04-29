@@ -21,33 +21,48 @@ from . import template
 class Backend(template.Backend):
     """The Genesis backend."""
 
-    name =          "genesis"
-    friendly_name = "Genesis (early development)"
-    version =       "0.1.0"
-    author =        ["XiangQinXi", "rgzz666"]
+    name: typing.ClassVar[str] =            "genesis"
+    friendly_name: typing.ClassVar[str] =   "Genesis (early development)"
+    version: typing.ClassVar[str] =         "0.1.0"
+    author: typing.ClassVar[list[str]] =    ["XiangQinXi", "rgzz666"]
 
     def __init__(self):
-        """APIs are alised here."""
+        """APIs are aliased here."""
         super().__init__()
 
-        self.WindowBase = WindowBase
+        self.WindowBase: type[WindowBase] = WindowBase
+        self.LineBase: type[LineBase] = LineBase
+        self.ShapeBase: type[ShapeBase] = ShapeBase
+        self.TextureBase: type[TextureBase] = TextureBase
     
     def backend_init(self, **kwargs) -> None:
         sdl2.ext.init()
 
 
 @dataclass
+class WindowBackdropSupportState(template.WindowBackdropSupportState):
+    """Represents support states of backdrop effects of windows held by this backend."""
+    color                   : bool = True
+    gradient                : bool = False
+    image                   : bool = False
+    transparent             : bool = False
+    alpha                   : bool = False
+    blur                    : bool = False
+    transformation          : bool = False
+    any_filter              : bool = False
+
+@dataclass
 class WindowSupportState(template.WindowSupportState):
     """Flags all supported window features."""
-    set_title              : bool = True
-    set_icon               : bool = True
-    resize                 : bool = True
-    set_scale_mode         : bool = True
-    set_background         : bool = True
-    translucent            : bool = True
-    set_state              : bool = True
-    fullscreen             : bool = True
-    customize_titlebar     : bool = True
+    set_title               : bool = True
+    set_icon                : bool = True
+    resize                  : bool = True
+    set_scale_mode          : bool = True
+    set_background          : bool = True
+    translucent             : bool = True
+    set_state               : bool = True
+    fullscreen              : bool = True
+    customize_titlebar      : bool = True
 
 class WindowBase(template.WindowBase):
     """Window APIs in Genesis backend."""
@@ -181,8 +196,11 @@ class LineSupportState(template.LineSupportState):
 
 class LineBase(template.LineBase):
     """Represents lines in backend."""
-
     supports: LineSupportState = LineSupportState()
 
-    def __init__(self):
-        ...
+
+class ShapeBase(template.ShapeBase):
+    pass
+
+class TextureBase(template.TextureBase):
+    pass

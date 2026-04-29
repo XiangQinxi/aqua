@@ -68,7 +68,15 @@ class SupportState():
 
 @dataclass
 class WindowBackdropSupportState(SupportState):
-    """Represents support states of backdrop effects of windows held by this backend."""
+    """Represents support states of backdrop effects of windows held by this backend.
+
+    Notes
+    -----
+    - `any_filter` basically means that Charmy will be freely able to process the pixels behind 
+      the window and hence can implement any kind of filter effect on window's backdrop.
+    - Charmy may use a virtual background layer for some texture-type backdrop effects if they 
+      are not supported by the backend. [PLANNED]
+    """
     color                   : bool = False
     gradient                : bool = False
     image                   : bool = False
@@ -81,8 +89,10 @@ class WindowBackdropSupportState(SupportState):
     # Notes:
     # - any_texture may be used in the future and maybe not, so I just commented it here.
     #   Actually I cannot think of any other kinds of textures, but, who knows?
-    # - any_filter basically means that Charmy will be able to processe the pixels behind the window
-    #   and hence can implement any kind of filter effect on window's backdrop.
+    # - any_filter basically means that Charmy will be freely able to process the pixels behind the 
+    #   window and hence can implement any kind of filter effect on window's backdrop.
+    # - Charmy may use a virtual background layer for some texture-type backdrop effects if they 
+    #   are not supported by the backend
 
 @dataclass
 class WindowSupportState(SupportState):
@@ -106,8 +116,7 @@ class WindowBase(WhateverBase):
     def __init__(self, backend: Backend) -> None:
         """Initializes the dummy window.
         
-        Args:
-            backend: The backend that this window uses
+        :param backend: The backend that this window uses
         """
         super().__init__(backend)
 
@@ -202,11 +211,10 @@ class ShapeBase():
     def draw_shape(shape: AnyShape, window: WindowBase, fill: TextureBase, border: TextureBase):
         """To draw a shape on a specific window.
 
-        Args:
-            shape: The shape to be drawn
-            window: The WindowBase to draw shape
-            fill: Texture to fill the shape
-            border: Texture to fill the shape border
+        :param shape: The shape to be drawn
+        :param window: The WindowBase to draw shape
+        :param fill: Texture to fill the shape
+        :param border: Texture to fill the shape border
         """
         placeholder_function(Backend.friendly_name)
 

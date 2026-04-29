@@ -67,17 +67,36 @@ class SupportState():
 
 
 @dataclass
+class WindowBackdropSupportState(SupportState):
+    """Represents support states of backdrop effects of windows held by this backend."""
+    color                   : bool = False
+    gradient                : bool = False
+    image                   : bool = False
+    # any_texture             : bool = False
+    transparent             : bool = False
+    alpha                   : bool = False
+    blur                    : bool = False
+    transformation          : bool = False
+    any_filter              : bool = False
+    # Notes:
+    # - any_texture may be used in the future and maybe not, so I just commented it here.
+    #   Actually I cannot think of any other kinds of textures, but, who knows?
+    # - any_filter basically means that Charmy will be able to processe the pixels behind the window
+    #   and hence can implement any kind of filter effect on window's backdrop.
+
+@dataclass
 class WindowSupportState(SupportState):
     """Represents support states of windows held by this backend."""
-    set_title              : bool = False
-    set_icon               : bool = False
-    resize                 : bool = False
-    set_scale_mode         : bool = False
-    set_background         : bool = False
-    translucent            : bool = False
-    set_state              : bool = False
-    fullscreen             : bool = False
-    customize_titlebar     : bool = False
+    set_title               : bool = False
+    set_icon                : bool = False
+    resize                  : bool = False
+    set_scale_mode          : bool = False
+    set_background          : bool = False
+    translucent             : bool = False
+    backdrop                : WindowBackdropSupportState = WindowBackdropSupportState()
+    set_state               : bool = False
+    fullscreen              : bool = False
+    customize_titlebar      : bool = False
 
 class WindowBase(WhateverBase):
     """Base of the windows, abstracts window-level operations from the base UI lib."""

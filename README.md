@@ -22,6 +22,6 @@ thx, now I'm getting annoyed with 26-key touchscreen keyboards 😅
 
 ## The Genesis Backend
 
-The Genesis backend is current used backend based on the same technologies fom Suzaku. It will be temporarily used during the development of the higher level GUI APIs exposed to users.
+The Genesis backend is current used backend. It will be temporarily used during the development of the higher level GUI APIs exposed to users.
 
-The Genesis backend uses OpenGL, GLFW and skia for rendering, window operations and drawing respectively. (This line may contain errors, because the person who wrote this version of README designed neither the Genisis backend nor the basic layer of Suzaku)
+The Genesis backend uses Cairo and SDL2 for rendering and window operations respectively.

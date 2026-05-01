@@ -130,6 +130,8 @@ class WindowBase(WhateverBase):
         self.fullscreen: bool = False
         self.customize_titlebar = False
 
+        self.drawing_list: list[cm_shape.DrawnLine | cm_shape.DrawnShape] = []
+
         # And no need to perform any action to a dummy window
 
     def show(self) -> typing.Self:
@@ -148,7 +150,7 @@ class WindowBase(WhateverBase):
             "Hint: If you already specified another backend, this means that backend is invalid."
         )
     
-    def draw_frame(self, drawing_list: list[cm_shape.LinePath | cm_shape.AnyShape]) -> None:
+    def draw_frame(self, drawing_list: list[cm_shape.DrawnLine | cm_shape.DrawnShape]) -> None:
         """Draw a frameon window, does nothing on a dummy."""
         not_implemented_func(Backend.friendly_name)
     
@@ -216,22 +218,6 @@ class ShapeBase():
         :param border: Texture to fill the shape border
         """
         not_implemented_func(Backend.friendly_name)
-
-# class Shape():
-#     """Represent a shape in backend layer that can be drawn on window."""
-
-#     def __init__(self, 
-#                  shape_type: str, 
-#                  shape_params: dict[str, typing.Any], 
-#                  pos: tuple[int, int] = (0, 0), 
-#                  texture: Texture | str | tuple[int, int, int] = "#00ff00", 
-#                  ):
-#         self.supports: ShapeSupportState = ShapeSupportState()
-
-#         self.type: str = shape_type
-#         self.shape_params: dict[str, typing.Any] = shape_params
-#         self.pos: tuple[int, int] = pos
-#         self.texture: Texture | str | tuple[int, int, int] = texture
 
 
 @dataclass

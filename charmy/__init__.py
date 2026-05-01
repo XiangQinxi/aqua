@@ -27,6 +27,6 @@ from .pos import Pos
 from .rect import Rect
 from .size import Size
 # from .frameworks import Frameworks
-from .styles import *
+from .styles import shape, texture, theme
 from .var import BooleanVar, FloatVar, IntVar, StringVar, Var
 from .widgets import *

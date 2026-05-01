@@ -24,7 +24,7 @@ class Color(Texture):
         :param color: The RGB(A) tuple or the HEX string that represents the color
         """
 
-        self.color: tuple[int, int, int, int]
+        self.color: tuple[int, int, int, int] = (0, 255, 0, 255)
 
         if type(color) is tuple: # Expressed by int tuple
             if len(color) == 4: # RGBA
@@ -33,9 +33,25 @@ class Color(Texture):
                 self.color = (*color, 255)
         elif type(color) is str:
             if color[0] == "#": # Remove leading hash if exists
-                color = color[1:-1]
+                color = color[1:]
             if len(color) == 6:
                 NotImplemented
+
+    def __iter__(self):
+        return self.color.__iter__()
+
+    @property
+    def r(self) -> int:
+        return self.color[0]
+    @property
+    def g(self) -> int:
+        return self.color[1]
+    @property
+    def b(self) -> int:
+        return self.color[2]
+    @property
+    def a(self) -> int:
+        return self.color[3]
 
         # # Import Drawing Framework
         # match self.frameworks.drawing_name:
@@ -131,6 +147,3 @@ class Color(Texture):
     #         if 0 < x <= 1.0:
     #             x = x * 255
     #     return x
-
-    def __getattribute__(self, name: str) -> typing.Any:
-        pass

@@ -18,9 +18,11 @@ import math
 
 from . import template
 
-if typing.TYPE_CHECKING:
-    import charmy.styles.shape as cm_shape
-    import charmy.styles.texture as cm_texture
+import charmy
+
+# if typing.TYPE_CHECKING:
+#     import charmy.styles.shape as charmy.shape
+#     import charmy.styles.texture as cm_texture
 
 
 class Backend(template.Backend):
@@ -83,6 +85,7 @@ class WindowBase(template.WindowBase):
         self.title = "Charmy SDL2 Window"
         self.size = (540, 480)
 
+
         # create window
         self.window: typing.Any = sdl2.SDL_CreateWindow(
             self.title.encode('utf-8'),
@@ -124,7 +127,7 @@ class WindowBase(template.WindowBase):
         
         :return self: The WindowBase itself
         """
-        self.draw_frame(NotImplemented)
+        self.draw_frame(self.drawing_list)
 
         # Following Vibed with Deepseek
 
@@ -163,11 +166,17 @@ class WindowBase(template.WindowBase):
                     sys.exit(0)
                     NotImplemented
 
-    def draw_frame(self, drawing_list: list[cm_shape.AnyShape | cm_shape.LinePath]) -> None:
+    def draw_frame(self, 
+                   drawing_list: list[charmy.shape.DrawnShape | charmy.shape.DrawnLine]) -> None:
         """Draw a frame for the window.
         
         :param drawing_list: The list of the objects to draw
         """
+        for drawing_obj in drawing_list:
+            if isinstance(drawing_obj, charmy.shape.DrawnLine):
+                LineBase.draw_line(drawing_obj.line, self, drawing_obj.texture)
+            else:
+                template.not_implemented_func(Backend.friendly_name)
         # # Test code for drawing, vibed with Doubao or Deepseek (whatever, I forgot)
 
         # self.cairo_context.set_source_rgba(1, 1, 1, 0)
@@ -204,38 +213,49 @@ class LineBase(template.LineBase):
     supports: LineSupportState = LineSupportState()
 
     @staticmethod
-    def draw_line(line: cm_shape.LinePath, window: WindowBase, texture: cm_texture.Texture):
+    def draw_line(line: charmy.shape.LinePath, window: WindowBase, 
+                  texture: charmy.texture.Texture, line_width: int = 5):
         """To draw a line on a specific window.
 
         Args:
             line: The line to be drawn
             window: The WindowBase to draw line
         """
+        # Detect wrong backend
         if window.Backend != Backend:
             raise RuntimeError(
                 "Wrong backend for draw_line()! Asked to draw on a window held by "
                 f"{window.backend.friendly_name} but I serve backend {Backend.friendly_name}!"
                 )
-        if isinstance(line, cm_shape.Line):
+        # Set texture & line width
+        if isinstance(texture, charmy.texture.Color):
+            window.cairo_context.set_source_rgba(*[v / 255 for v in texture])
+        else:
+            template.not_implemented_func(Backend.friendly_name)
+        window.cairo_context.set_line_width(line_width)
+        # Draw line
+        if isinstance(line, charmy.shape.Line):
             window.cairo_context.move_to(*line.points[0])
             window.cairo_context.line_to(*line.points[1])
-        elif isinstance(line, cm_shape.PolyLine):
+        elif isinstance(line, charmy.shape.PolyLine):
             window.cairo_context.move_to(*line.points[0])
             for point in line.points:
                 window.cairo_context.line_to(*point)
-        elif isinstance(line, cm_shape.CircleArc):
+        elif isinstance(line, charmy.shape.CircleArc):
             # window.cairo_context.move_to(*line.center)
             start_orient_rad = line.start_orient * (math.pi / 180)
             end_orient_rad = line.end_orient * (math.pi / 180)
             window.cairo_context.arc(line.center[0], line.center[1], line.radius, 
                                      start_orient_rad, end_orient_rad)
-        elif isinstance(line, cm_shape.CubicBezier):
+        elif isinstance(line, charmy.shape.CubicBezier):
             window.cairo_context.move_to(*line.points[0])
             window.cairo_context.curve_to(
                 *line.points[1], *line.points[2], *line.points[3]
                 )
         else:
             template.not_implemented_func(Backend.friendly_name)
+        # Draw line
+        window.cairo_context.stroke()
 
 
 class ShapeBase(template.ShapeBase):

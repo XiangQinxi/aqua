@@ -2,6 +2,7 @@ import typing
 
 import warnings
 from dataclasses import dataclass
+import math
 
 from ..object import CharmyObject
 
@@ -18,7 +19,7 @@ class LinePath():
 
     type: typing.ClassVar[str] = "line_path_class"
 
-    def draw(self, window: Window, texture: Texture):
+    def draw(self, window: Window, texture: Texture, width: int = 5):
         """Draw the line."""
         backend = window.backend_base.backend
         # 👆 Alias to avoid path to backend properties getting too long. 😅
@@ -27,7 +28,10 @@ class LinePath():
         else:
             if self.type in backend.LineBase.supports:
                 # If supported by the windows' backend.
-                backend.LineBase.draw_line(self, window, texture)
+                window.backend_base.drawing_list.append(
+                    DrawnLine(self, texture, width)
+                    )
+                # backend.LineBase.draw_line(self, window, texture)
             else:
                 warnings.warn(f"Line type {self.type} is not supported by "
                               f"backend {backend.friendly_name}")
@@ -106,6 +110,24 @@ class CircleArc(LinePath):
     start_orient: int
     end_orient: int
 
+    @property
+    def start_point(self) -> tuple[int, int]:
+        # Vibed with VSCode Copilot, model GPT-5 mini
+        # Compute start point from center, radius and start_orient (degrees).
+        theta = math.radians(self.start_orient)
+        x = self.center[0] + int(round(self.radius * math.cos(theta)))
+        y = self.center[1] + int(round(self.radius * math.sin(theta)))
+        return (x, y)
+
+    @property
+    def end_point(self) -> tuple[int, int]:
+        # Vibed with VSCode Copilot, model GPT-5 mini
+        # Compute end point from center, radius and end_orient (degrees).
+        theta = math.radians(self.end_orient)
+        x = self.center[0] + int(round(self.radius * math.cos(theta)))
+        y = self.center[1] + int(round(self.radius * math.sin(theta)))
+        return (x, y)
+
 @dataclass
 class EllipseArc(LinePath):
     """Represents arcs trimmed from ellipses.
@@ -127,6 +149,7 @@ class EllipseArc(LinePath):
     end_orient: int
 
     def __post_init__(self):
+        raise NotImplementedError("Ellipse arc is not fully implemented yet.")
         if not -360 < self.rotation < 360:
             self.rotation = self.rotation % 360
 
@@ -202,5 +225,22 @@ class AnyShape(CharmyObject):
     def draw(self):
         """Draw the shape using backend."""
         NotImplemented
+
+# endregion
+
+# region Drawn Lines / Shapes
+
+@dataclass
+class DrawnLine():
+    line: LinePath
+    texture: Texture
+    width: int = 5
+
+@dataclass
+class DrawnShape():
+    shape: AnyShape
+    texture: Texture
+    border_width: int = 0
+    border_texture: Texture | None = None
 
 # endregion

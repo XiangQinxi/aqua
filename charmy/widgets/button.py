@@ -1,5 +1,5 @@
 from .widget import Widget
-from ..styles.Texture import Color
+from ..styles.texture import Color
 
 class Button(Widget):
     def __init__(self, *args, text: str = "", **kwargs):

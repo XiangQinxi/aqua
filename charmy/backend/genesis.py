@@ -119,7 +119,8 @@ class WindowBase(template.WindowBase):
 
     def set_title(self, new: str) -> typing.Self:
         """Set window title."""
-        self.window.title = new
+        self.title = new
+        sdl2.SDL_SetWindowTitle(self.window, self.title.encode("utf-8"))
         return self
     
     def update(self):

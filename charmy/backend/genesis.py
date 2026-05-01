@@ -17,6 +17,9 @@ import ctypes
 
 from . import template
 
+if typing.TYPE_CHECKING:
+    import charmy.styles.shape as cm_shape
+
 
 class Backend(template.Backend):
     """The Genesis backend."""
@@ -197,6 +200,16 @@ class LineSupportState(template.LineSupportState):
 class LineBase(template.LineBase):
     """Represents lines in backend."""
     supports: LineSupportState = LineSupportState()
+
+    @staticmethod
+    def draw_line(line: cm_shape.LinePath, window: WindowBase, texture: Texture):
+        """To draw a line on a specific window.
+
+        Args:
+            line: The line to be drawn
+            window: The WindowBase to draw line
+        """
+        window.cairo_context
 
 
 class ShapeBase(template.ShapeBase):

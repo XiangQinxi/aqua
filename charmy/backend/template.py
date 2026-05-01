@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import warnings
 
 if typing.TYPE_CHECKING:
-    from charmy.styles.shape import LinePath, AnyShape
+    import charmy.styles.shape as cm_shape
 
 
 # ChatGPT says that my framework is good.   —— rgzz666 @2026/04/15
@@ -149,7 +149,7 @@ class WindowBase(WhateverBase):
             "Hint: If you already specified another backend, this means that backend is invalid."
         )
     
-    def draw_frame(self) -> None:
+    def draw_frame(self, drawing_list: list[cm_shape.LinePath | cm_shape.AnyShape]) -> None:
         """Draw a frameon window, does nothing on a dummy."""
         placeholder_function(Backend.friendly_name)
     
@@ -179,7 +179,7 @@ class LineBase(WhateverBase):
         raise RuntimeError("LineBase is used to hold APIs, but not supposed to be instantiated.")
 
     @staticmethod
-    def draw_line(line: LinePath, window: WindowBase):
+    def draw_line(line: cm_shape.LinePath, window: WindowBase, texture: Texture):
         """To draw a line on a specific window.
 
         Args:
@@ -208,7 +208,7 @@ class ShapeBase():
         raise RuntimeError("ShapeBase is used to hold APIs, but not supposed to be instantiated.")
 
     @staticmethod
-    def draw_shape(shape: AnyShape, window: WindowBase, fill: TextureBase, border: TextureBase):
+    def draw_shape(shape: cm_shape.AnyShape, window: WindowBase, fill: TextureBase, border: TextureBase):
         """To draw a shape on a specific window.
 
         :param shape: The shape to be drawn

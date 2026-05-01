@@ -1,1 +1,1 @@
-from .color import Color
+from .Texture import Color

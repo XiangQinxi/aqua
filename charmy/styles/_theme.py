@@ -8,7 +8,7 @@ import re
 import typing
 import warnings
 
-from . import color
+from . import Texture
 
 if typing.TYPE_CHECKING:
     # from .。widgets.widget import CWidget
@@ -547,7 +547,7 @@ class CTheme:
             "-black": (0, 0, 0, 255),
             "-white": (255, 255, 255, 255),
             "-absneutralgrey": (128, 128, 128, 255),
-            "-errcolor": color.ERR_COLOR,
+            "-errcolor": Texture.ERR_COLOR,
         }
         if color_name in keywords:
             # If is a keyword
@@ -567,9 +567,9 @@ class CTheme:
                     # If not, then is root theme, go fuck your color name
                     warnings.warn(
                         f"Color <{color_name}> if not found anywhere.",
-                        color.CColorWarning,
+                        Texture.CColorWarning,
                     )
-                    result = color.ERR_COLOR
+                    result = Texture.ERR_COLOR
         if isinstance(result, dict):
             return result.copy()
         else:

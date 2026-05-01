@@ -243,8 +243,8 @@ class LineBase(template.LineBase):
                 window.cairo_context.line_to(*point)
         elif isinstance(line, charmy.shape.CircleArc):
             # window.cairo_context.move_to(*line.center)
-            start_orient_rad = line.start_orient * (math.pi / 180)
-            end_orient_rad = line.end_orient * (math.pi / 180)
+            start_orient_rad = (line.start_orient - 90) * (math.pi / 180)
+            end_orient_rad = (line.end_orient - 90) * (math.pi / 180)
             window.cairo_context.arc(line.center[0], line.center[1], line.radius, 
                                      start_orient_rad, end_orient_rad)
         elif isinstance(line, charmy.shape.CubicBezier):

@@ -4,11 +4,25 @@ import typing
 from ..object import CharmyObject
 
 
-class Color():
+class Texture():
+    pass
+
+class Color(Texture):
     """Color manager"""
 
+    # @typing.overload
+    # def __init__(self, r: int, g: int, b: int, a: int = 255): ... # RGB(A)
+    # @typing.overload
+    # def __init__(self, color: tuple[int, int, int, int] | \
+    #              tuple[int, int, int]): ... # Single RGB(A) tuple
+    # @typing.overload
+    # def __init__(self, color: str): ... # Single HEX string (RRGGBB / RRGGBBAA)
+
     def __init__(self, color: tuple[int, int, int, int] | tuple[int, int, int] | str):
-        """Initialize a color object"""
+        """Initialize a color object.
+        
+        :param color: The RGB(A) tuple or the HEX string that represents the color
+        """
 
         self.color: tuple[int, int, int, int]
 

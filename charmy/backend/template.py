@@ -5,13 +5,15 @@ from dataclasses import dataclass
 import warnings
 
 if typing.TYPE_CHECKING:
-    import charmy.styles.shape as cm_shape
+    from ..styles import shape as cm_shape
+    from ..styles import texture as cm_texture
+    from ..widgets import window as cm_window
 
 
 # ChatGPT says that my framework is good.   —— rgzz666 @2026/04/15
 
 
-def placeholder_function(backend_name: str = "currently used", **kwargs) -> bool:
+def not_implemented_func(backend_name: str = "currently used", **kwargs) -> bool:
     warnings.warn(f"This function is not implemented in backend {backend_name}.")
     return False
 
@@ -35,10 +37,10 @@ class Backend():
         return None
     
     def draw_line(self, line: LineBase, window: WindowBase):
-        placeholder_function(Backend.friendly_name)
+        not_implemented_func(Backend.friendly_name)
     
     def draw_shape(self, shape: ShapeBase, window: WindowBase, pos: tuple[int, int] | None) -> None:
-        placeholder_function(Backend.friendly_name)
+        not_implemented_func(Backend.friendly_name)
 
 
 class WhateverBase():
@@ -56,7 +58,6 @@ class WhateverBase():
                 )
 
 
-@dataclass
 class SupportState():
     """To flag which features this backend supports."""
 
@@ -66,7 +67,6 @@ class SupportState():
     pass
 
 
-@dataclass
 class WindowBackdropSupportState(SupportState):
     """Represents support states of backdrop effects of windows held by this backend.
 
@@ -94,7 +94,6 @@ class WindowBackdropSupportState(SupportState):
     # - Charmy may use a virtual background layer for some texture-type backdrop effects if they 
     #   are not supported by the backend
 
-@dataclass
 class WindowSupportState(SupportState):
     """Represents support states of windows held by this backend."""
     set_title               : bool = False
@@ -103,7 +102,7 @@ class WindowSupportState(SupportState):
     set_scale_mode          : bool = False
     set_background          : bool = False
     translucent             : bool = False
-    backdrop                : WindowBackdropSupportState = WindowBackdropSupportState()
+    backdrop                : type[WindowBackdropSupportState] = WindowBackdropSupportState
     set_state               : bool = False
     fullscreen              : bool = False
     customize_titlebar      : bool = False
@@ -111,7 +110,7 @@ class WindowSupportState(SupportState):
 class WindowBase(WhateverBase):
     """Base of the windows, abstracts window-level operations from the base UI lib."""
 
-    supports: WindowSupportState = WindowSupportState()
+    supports: type[WindowSupportState] = WindowSupportState
 
     def __init__(self, backend: Backend) -> None:
         """Initializes the dummy window.
@@ -151,11 +150,11 @@ class WindowBase(WhateverBase):
     
     def draw_frame(self, drawing_list: list[cm_shape.LinePath | cm_shape.AnyShape]) -> None:
         """Draw a frameon window, does nothing on a dummy."""
-        placeholder_function(Backend.friendly_name)
+        not_implemented_func(Backend.friendly_name)
     
     def set_title(self, new: str) -> typing.Self:
         """Set title to window, does nothing on dummy"""
-        placeholder_function(Backend.friendly_name)
+        not_implemented_func(Backend.friendly_name)
         return self
 
 
@@ -179,14 +178,14 @@ class LineBase(WhateverBase):
         raise RuntimeError("LineBase is used to hold APIs, but not supposed to be instantiated.")
 
     @staticmethod
-    def draw_line(line: cm_shape.LinePath, window: WindowBase, texture: Texture):
+    def draw_line(line: cm_shape.LinePath, window: cm_window.Window, texture: cm_texture.Texture):
         """To draw a line on a specific window.
 
         Args:
             line: The line to be drawn
             window: The WindowBase to draw line
         """
-        placeholder_function(Backend.friendly_name)
+        not_implemented_func(Backend.friendly_name)
 
 
 class ShapeSupportState(SupportState):
@@ -216,7 +215,7 @@ class ShapeBase():
         :param fill: Texture to fill the shape
         :param border: Texture to fill the shape border
         """
-        placeholder_function(Backend.friendly_name)
+        not_implemented_func(Backend.friendly_name)
 
 # class Shape():
 #     """Represent a shape in backend layer that can be drawn on window."""

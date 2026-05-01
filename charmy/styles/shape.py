@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from ..object import CharmyObject
 
 if typing.TYPE_CHECKING:
-    from ..backend.template import Backend
+    from .texture import Texture
     from ..widgets.window import Window
 
 
@@ -18,7 +18,7 @@ class LinePath():
 
     type: typing.ClassVar[str] = "line_path_class"
 
-    def draw(self, window: Window):
+    def draw(self, window: Window, texture: Texture):
         """Draw the line."""
         backend = window.backend_base.backend
         # 👆 Alias to avoid path to backend properties getting too long. 😅
@@ -27,8 +27,7 @@ class LinePath():
         else:
             if self.type in backend.LineBase.supports:
                 # If supported by the windows' backend.
-                backend.draw_line(self, window)
-                NotImplemented
+                backend.LineBase.draw_line(self, window, texture)
             else:
                 warnings.warn(f"Line type {self.type} is not supported by "
                               f"backend {backend.friendly_name}")

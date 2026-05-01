@@ -14,11 +14,13 @@ import sdl2.ext
 import cairo
 import sys
 import ctypes
+import math
 
 from . import template
 
 if typing.TYPE_CHECKING:
     import charmy.styles.shape as cm_shape
+    import charmy.styles.texture as cm_texture
 
 
 class Backend(template.Backend):
@@ -42,7 +44,6 @@ class Backend(template.Backend):
         sdl2.ext.init()
 
 
-@dataclass
 class WindowBackdropSupportState(template.WindowBackdropSupportState):
     """Represents support states of backdrop effects of windows held by this backend."""
     color                   : bool = True
@@ -54,7 +55,6 @@ class WindowBackdropSupportState(template.WindowBackdropSupportState):
     transformation          : bool = False
     any_filter              : bool = False
 
-@dataclass
 class WindowSupportState(template.WindowSupportState):
     """Flags all supported window features."""
     set_title               : bool = True
@@ -63,20 +63,20 @@ class WindowSupportState(template.WindowSupportState):
     set_scale_mode          : bool = True
     set_background          : bool = True
     translucent             : bool = True
+    backdrop                : type[WindowBackdropSupportState] = WindowBackdropSupportState
     set_state               : bool = True
     fullscreen              : bool = True
     customize_titlebar      : bool = True
 
 class WindowBase(template.WindowBase):
     """Window APIs in Genesis backend."""
-    supports = WindowSupportState()
+    supports = WindowSupportState
     Backend = Backend
 
     def __init__(self, backend: template.Backend):
         """Creates a window.
         
-        Args:
-            backend: The backend that this window uses (can be get from CharmyManager)
+        :param backend: The backend that this window uses (can be get from CharmyManager)
         """
         super().__init__(backend)
 
@@ -109,8 +109,7 @@ class WindowBase(template.WindowBase):
     def show(self) -> typing.Self:
         """Show the window.
 
-        Returns:
-            self: The WindowBase itself.
+        :return self: The WindowBase itself
         """
         # self.window.show()
         return self
@@ -123,10 +122,9 @@ class WindowBase(template.WindowBase):
     def update(self):
         """Update the window.
         
-        Returns:
-            self: The WindowBase itself.
+        :return self: The WindowBase itself
         """
-        self.draw_frame()
+        self.draw_frame(NotImplemented)
 
         # Following Vibed with Deepseek
 
@@ -165,22 +163,26 @@ class WindowBase(template.WindowBase):
                     sys.exit(0)
                     NotImplemented
 
-    def draw_frame(self) -> None:
-        # Test code for drawing, vibed with Doubao or Deepseek (whatever, I forgot)
+    def draw_frame(self, drawing_list: list[cm_shape.AnyShape | cm_shape.LinePath]) -> None:
+        """Draw a frame for the window.
+        
+        :param drawing_list: The list of the objects to draw
+        """
+        # # Test code for drawing, vibed with Doubao or Deepseek (whatever, I forgot)
 
-        self.cairo_context.set_source_rgba(1, 1, 1, 0)
-        self.cairo_context.paint()
+        # self.cairo_context.set_source_rgba(1, 1, 1, 0)
+        # self.cairo_context.paint()
         
-        # 绘制红色圆形
-        self.cairo_context.set_source_rgb(1, 0, 0)  # 完全不透明的红色
-        self.cairo_context.arc(270, 240, 80, 0, 6.28)
-        self.cairo_context.fill()
+        # # 绘制红色圆形
+        # self.cairo_context.set_source_rgb(1, 0, 0)  # 完全不透明的红色
+        # self.cairo_context.arc(270, 240, 80, 0, 6.28)
+        # self.cairo_context.fill()
         
-        # 可选：添加边框让圆形更明显
-        self.cairo_context.set_source_rgb(0, 0, 0)
-        self.cairo_context.arc(270, 240, 80, 0, 6.28)
-        self.cairo_context.set_line_width(2)
-        self.cairo_context.stroke()
+        # # 可选：添加边框让圆形更明显
+        # self.cairo_context.set_source_rgb(0, 0, 0)
+        # self.cairo_context.arc(270, 240, 80, 0, 6.28)
+        # self.cairo_context.set_line_width(2)
+        # self.cairo_context.stroke()
     
     def mainloop(self):
         while True:
@@ -193,8 +195,8 @@ class LineSupportState(template.LineSupportState):
     line                : bool = True
     polyline            : bool = True
     circle_arc          : bool = True
-    ellipse_arc         : bool = True
-    quadratic_bezier    : bool = True
+    ellipse_arc         : bool = False
+    quadratic_bezier    : bool = False
     cubic_bezier        : bool = True
 
 class LineBase(template.LineBase):
@@ -202,14 +204,38 @@ class LineBase(template.LineBase):
     supports: LineSupportState = LineSupportState()
 
     @staticmethod
-    def draw_line(line: cm_shape.LinePath, window: WindowBase, texture: Texture):
+    def draw_line(line: cm_shape.LinePath, window: WindowBase, texture: cm_texture.Texture):
         """To draw a line on a specific window.
 
         Args:
             line: The line to be drawn
             window: The WindowBase to draw line
         """
-        window.cairo_context
+        if window.Backend != Backend:
+            raise RuntimeError(
+                "Wrong backend for draw_line()! Asked to draw on a window held by "
+                f"{window.backend.friendly_name} but I serve backend {Backend.friendly_name}!"
+                )
+        if isinstance(line, cm_shape.Line):
+            window.cairo_context.move_to(*line.points[0])
+            window.cairo_context.line_to(*line.points[1])
+        elif isinstance(line, cm_shape.PolyLine):
+            window.cairo_context.move_to(*line.points[0])
+            for point in line.points:
+                window.cairo_context.line_to(*point)
+        elif isinstance(line, cm_shape.CircleArc):
+            # window.cairo_context.move_to(*line.center)
+            start_orient_rad = line.start_orient * (math.pi / 180)
+            end_orient_rad = line.end_orient * (math.pi / 180)
+            window.cairo_context.arc(line.center[0], line.center[1], line.radius, 
+                                     start_orient_rad, end_orient_rad)
+        elif isinstance(line, cm_shape.CubicBezier):
+            window.cairo_context.move_to(*line.points[0])
+            window.cairo_context.curve_to(
+                *line.points[1], *line.points[2], *line.points[3]
+                )
+        else:
+            template.not_implemented_func(Backend.friendly_name)
 
 
 class ShapeBase(template.ShapeBase):

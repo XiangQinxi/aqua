@@ -36,13 +36,14 @@ class Backend():
     version: str =          "0.0.0"
     author: list[str] =     ["Charmy dev team"]
 
+    WindowBase: type[WindowBase]
+    LineBase: type[LineBase]
+    ShapeBase: type[ShapeBase]
+    TextureBase: type[TextureBase]
+
     def __init__(self):
-        """APIs are aliased here."""
-        # Make alias for WhateverBase classes
-        self.WindowBase: type[WindowBase] = WindowBase
-        self.LineBase: type[LineBase] = LineBase
-        self.ShapeBase: type[ShapeBase] = ShapeBase
-        self.TextureBase: type[TextureBase] = TextureBase
+        """Initialize a backend"""
+        return
     
     def backend_init(self) -> None:
         return None
@@ -238,3 +239,13 @@ class TextureSupportState(SupportState):
 
 class TextureBase():
     pass
+
+
+# region: Alias WhateverBase classes
+
+Backend.WindowBase = WindowBase
+Backend.LineBase = LineBase
+Backend.ShapeBase = ShapeBase
+Backend.TextureBase = TextureBase
+
+# endregion

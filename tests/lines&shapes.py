@@ -12,9 +12,9 @@ test_quadratic_bezier = cm.shape.QuadraticBezier([
     (150, 200), (300, 300), (10, 400)
     ])
 
-test_polyline.draw(window, cm.texture.Color((255, 100, 100)))
-test_arc.draw(window, cm.texture.Color((100, 100, 255)))
-test_quadratic_bezier.draw(window, cm.texture.Color((100, 255, 100)), width=2)
+test_polyline.draw(window, (255, 100, 100))
+test_arc.draw(window, (100, 100, 255))
+test_quadratic_bezier.draw(window, (100, 255, 100, 100), width=2)
 
 
 cm.mainloop()

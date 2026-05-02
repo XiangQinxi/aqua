@@ -6,10 +6,11 @@ import warnings
 from dataclasses import dataclass
 import math
 
-from ..object import CharmyObject
+from .texture import ensure_texture as _ensure_texture
+from .texture import Texture
 
 if typing.TYPE_CHECKING:
-    from .texture import Texture
+    from .texture import Texture, TextureLike
     from ..widgets.window import Window
 
 
@@ -25,7 +26,7 @@ class LinePath():
 
     type: typing.ClassVar[str] = "line_path_class"
 
-    def draw(self, window: Window, texture: Texture, width: int = 5) -> typing.Self:
+    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw the line.
 
         :param window: The window to draw line to
@@ -137,7 +138,7 @@ class CircleArc(LinePath):
         y = self.center[1] + int(round(self.radius * math.sin(theta)))
         return (x, y)
 
-    def draw(self, window:Window, texture: Texture, width: int = 5) -> typing.Self:
+    def draw(self, window:Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw the circle arc, convert to Bezier curves if backend does not support.
         
         :param window: The window to draw line to
@@ -206,6 +207,8 @@ class CircleArc(LinePath):
 
             cos0, sin0 = math.cos(t0), math.sin(t0)
             cos1, sin1 = math.cos(t1), math.sin(t1)
+
+            # For y coods, must use negative operations, because y-axis is reversed on a window
 
             # Endpoints
             x0: int = int(round(cx + self.radius * cos0, 0))
@@ -276,7 +279,7 @@ class QuadraticBezier(LinePath):
     def end_point(self) -> tuple[int, int]:
         return self.points[-1]
     
-    def draw(self, window: Window, texture: Texture, width: int = 5):
+    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5):
         """Draw the quadratic Bezier, convert to cubic Bezier curves if backend does not support.
         
         :param window: The window to draw line to
@@ -322,7 +325,7 @@ class CubicBezier(LinePath):
 
 class CharmyShapeError(Exception): ...
 
-class AnyShape(CharmyObject):
+class AnyShape():
     """Base class of all shapes."""
 
     def __init__(self, lines: list[LinePath]):
@@ -348,9 +351,12 @@ class AnyShape(CharmyObject):
             # 👆 Set last_line_end to end point of current line, lines must be connected.
         return True
 
-    def draw(self):
+    def draw(self, window: Window, texture: Texture | TextureLike, 
+             border_width: int = 0, border_texture: Texture | TextureLike = None):
         """Draw the shape using backend."""
-        NotImplemented
+        window.backend_base.drawing_list.append(
+            DrawnShape(self, texture, border_width, border_texture)
+            )
 
 # endregion
 
@@ -360,15 +366,64 @@ class AnyShape(CharmyObject):
 class DrawnLine():
     """A class used to represent lines drawn to windows."""
     line: LinePath
-    texture: Texture
+    _texture: Texture
     width: int = 5
+
+    def __init__(self, line: LinePath, texture: Texture | TextureLike, width: int = 5):
+        self.line = line
+        self.texture = texture
+        self.width = width
+
+    @property
+    def texture(self) -> Texture:
+        return self._texture
+
+    @texture.setter
+    def texture(self, new_texture: Texture | TextureLike) -> None:
+        if isinstance(new_texture, Texture):
+            self._texture = new_texture
+        else:
+            # Convert into texture
+            self._texture = _ensure_texture(new_texture)
+
 
 @dataclass
 class DrawnShape():
     """A Class used to represent shapes drawn to windows"""
     shape: AnyShape
-    texture: Texture
+    _texture: Texture
     border_width: int = 0
-    border_texture: Texture | None = None
+    _border_texture: Texture = _ensure_texture(None)
+
+    def __init__(self, shape: AnyShape, texture: Texture | TextureLike, 
+                 border_width: int = 5, border_texture: Texture | TextureLike = None):
+        self.shape = shape
+        self.texture = texture
+        self.border_width = border_width
+        self.border_texture = border_texture
+
+    @property
+    def texture(self) -> Texture:
+        return self._texture
+
+    @texture.setter
+    def texture(self, new_texture: Texture | TextureLike) -> None:
+        if isinstance(new_texture, Texture):
+            self._texture = new_texture
+        else:
+            # Convert into texture
+            self._texture = _ensure_texture(new_texture)
+
+    @property
+    def border_texture(self) -> Texture:
+        return self._border_texture
+
+    @border_texture.setter
+    def border_texture(self, new_texture: Texture | TextureLike) -> None:
+        if isinstance(new_texture, Texture):
+            self._border_texture = new_texture
+        else:
+            # Convert into texture
+            self._border_texture = _ensure_texture(new_texture)
 
 # endregion

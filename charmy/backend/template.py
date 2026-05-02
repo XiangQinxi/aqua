@@ -13,8 +13,18 @@ if typing.TYPE_CHECKING:
 # ChatGPT says that my framework is good.   —— rgzz666 @2026/04/15
 
 
-def not_implemented_func(backend_name: str = "currently used", **kwargs) -> bool:
-    warnings.warn(f"This function is not implemented in backend {backend_name}.")
+def not_implemented_func(
+        backend_name: str = "currently used", 
+        operation_desc: str = "This operation", 
+        **kwargs) -> bool:
+    """To throw a warning to tell that a specific function is not implemented by the backend.
+
+    The parameters only affects the warning message.
+
+    :param backend_name: Friendly name of the backend
+    :param operation_desc: Description of the operation
+    """
+    warnings.warn(f"{operation_desc} is not implemented in backend {backend_name}.", stacklevel=2)
     return False
 
 

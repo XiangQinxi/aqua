@@ -4,11 +4,22 @@ import typing
 from ..object import CharmyObject
 
 
+# region Texture base class
+
 class Texture():
     pass
 
+# endregion
+
+# region Color
+
+# Color types
+RGB: typing.TypeAlias = tuple[int, int, int]
+RGBA: typing.TypeAlias = tuple[int, int, int, int]
+HEX: typing.TypeAlias = str
+
 class Color(Texture):
-    """Color manager"""
+    """Represents pure colors."""
 
     # @typing.overload
     # def __init__(self, r: int, g: int, b: int, a: int = 255): ... # RGB(A)
@@ -18,27 +29,27 @@ class Color(Texture):
     # @typing.overload
     # def __init__(self, color: str): ... # Single HEX string (RRGGBB / RRGGBBAA)
 
-    def __init__(self, color: tuple[int, int, int, int] | tuple[int, int, int] | str):
+    def __init__(self, color: RGB | RGBA | HEX):
         """Initialize a color object.
         
         :param color: The RGB(A) tuple or the HEX string that represents the color
         """
 
-        self.color: tuple[int, int, int, int] = (0, 255, 0, 255)
+        self.color: RGBA = (0, 255, 0, 255)
 
-        if type(color) is tuple: # Expressed by int tuple
+        if isinstance(color, tuple): # Expressed by int tuple
             if len(color) == 4: # RGBA
                 self.color = color
             elif len(color) == 3: # RGB
                 self.color = (*color, 255)
-        elif type(color) is str:
+        elif isinstance(color, str):
             if color[0] == "#": # Remove leading hash if exists
                 color = color[1:]
             if len(color) == 6:
                 NotImplemented
 
     def __iter__(self):
-        return self.color.__iter__()
+        return iter(self.color)
 
     @property
     def r(self) -> int:
@@ -53,97 +64,52 @@ class Color(Texture):
     def a(self) -> int:
         return self.color[3]
 
-        # # Import Drawing Framework
-        # match self.frameworks.drawing_name:
-        #     case "SKIA":
-        #         self.skia = self.frameworks.drawing.skia
-        #     case _:
-        #         raise ValueError(
-        #             f"Not supported drawing frameworks: {self.frameworks.drawing_name}"
-        #         )
-        # self.color_object = None
+ColorLike: typing.TypeAlias = RGB | RGBA | HEX
 
-    # def set_color_rgba(
-    #     self, r: int | float, g: int | float, b: int | float, a: int | float = 255
-    # ) -> typing.Self:
-    #     """set_rgba(r=255, g=255, b=255, a=255) or set_rgba(r=1.0, g=1.0, b=1.0, a=1.0)
+# endregion
 
-    #     Args:
-    #         r (int | float): The red component of the color.
-    #         g (int | float): The green component of the color.
-    #         b (int | float): The blue component of the color.
-    #         a (int | float): The alpha component of the color.
+# region Transparent
 
-    #     Returns:
-    #         None
-    #     """
-    #     match self.frameworks.drawing_name:
-    #         case "SKIA":
-    #             self.color_object = self.skia.Color(self._c(r), self._c(g), self._c(b), self._c(a))
-    #     return self
+class Transparent(Texture):
+    """Represents transparent.
 
-    # def set_color_hex(self, _hex: str) -> typing.Self:
-    #     """
-    #     Convert hex color string to color.
+    Note that, in actual rendering, items with Transparent texture should be skipped.
+    """
 
-    #     Args:
-    #         _hex (str): Hex color string (support #RRGGBB and #RRGGBBAA format)
+    def __init__(self):
+        """Initialize a Transparent object."""
+        self.color = (0, 0, 0, 0)
 
-    #     Returns:
-    #         skia.Color: Corresponding RGBA color object
+    def __iter__(self):
+        return iter(self.color)
 
-    #     Raises:
-    #         ValueError: When hex color format is invalid
-    #     """
-    #     hex_color = _hex.lstrip("#")
-    #     if len(hex_color) == 6:  # RGB 格式，默认不透明(Alpha=255)
-    #         r = int(hex_color[0:2], 16)
-    #         g = int(hex_color[2:4], 16)
-    #         b = int(hex_color[4:6], 16)
-    #         match self.frameworks.drawing_name:
-    #             case Drawing.SKIA:
-    #                 self.color_object = self.skia.ColorSetRGB(r, g, b)  # 返回不透明颜色
-    #     elif len(hex_color) == 8:  # RGBA 格式(含 Alpha 通道)
-    #         r = int(hex_color[0:2], 16)
-    #         g = int(hex_color[2:4], 16)
-    #         b = int(hex_color[4:6], 16)
-    #         a = int(hex_color[6:8], 16)
-    #         match self.frameworks.drawing_name:
-    #             case Drawing.SKIA:
-    #                 self.color_object = self.skia.ColorSetARGB(a, r, g, b)  # 返回含透明度的颜色
-    #     else:
-    #         raise ValueError("HEX Should be #RRGGBB or #RRGGBBAA format")
-    #     return self
+TransparentLike: typing.TypeAlias = None | tuple[int, int, int, typing.Literal[0]]
 
-    # def set_color_name(self, name: str) -> typing.Self:
-    #     """Convert color name string to color.
+# endregion
 
-    #     Args:
-    #         name (str): Color name
-    #     Returns:
-    #         skia.Color: Corresponding RGBA color object
-    #     Raises:
-    #         ValueError: When color not exists
-    #     """
-    #     match self.frameworks.drawing_name:
-    #         case Drawing.SKIA:
-    #             try:
-    #                 self.color_object = getattr(self.skia, f"Color{name.upper()}")
-    #             except:
-    #                 raise ValueError(f"Unknown color name: {name}")
-    #     return self
 
-    # @staticmethod
-    # def _c(x):
-    #     """Convert float color component to int.
+# region ensure_texture
 
-    #     Args:
-    #         x (int | float): Color component value (0.0-1.0 or 0-255)
+TextureLike: typing.TypeAlias = ColorLike | TransparentLike
 
-    #     Returns:
-    #         int: Corresponding int value (0-255)
-    #     """
-    #     if isinstance(x, float):
-    #         if 0 < x <= 1.0:
-    #             x = x * 255
-    #     return x
+def ensure_texture(texture_like: Texture | TextureLike) -> Texture:
+    """Convert TextureLike types into Texture objects."""
+    if isinstance(texture_like, Texture):
+        result = texture_like
+    else:
+        # Convert into texture
+        if isinstance(texture_like, tuple): # RGB(A)
+            if len(texture_like) == 4: # RGBA
+                if texture_like[-1] == 0: # Transparent
+                    result = Transparent()
+                else: # RGBA, not transparent
+                    result = Color(texture_like)
+            elif len(texture_like) == 3: # RGB
+                result = Color(texture_like)
+        elif isinstance(texture_like, str): # HEX
+            result = Color(texture_like)
+        elif texture_like is None: # Transparent
+            result = Transparent()
+    return result
+
+# endregion

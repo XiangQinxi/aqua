@@ -230,10 +230,14 @@ class LineBase(template.LineBase):
                 f"{window.backend.friendly_name} but I serve backend {Backend.friendly_name}!"
                 )
         # Set texture & line width
-        if isinstance(texture, charmy.texture.Color):
+        if isinstance(texture, charmy.texture.Transparent):
+            return # Skip drawing transparent stuff
+        elif isinstance(texture, charmy.texture.Color):
             window.cairo_context.set_source_rgba(*[v / 255 for v in texture])
         else:
-            template.not_implemented_func(Backend.friendly_name)
+            template.not_implemented_func(
+                Backend.friendly_name, f"Drawing texture type {texture.__class__.__name__}"
+                )
         window.cairo_context.set_line_width(line_width)
         # Draw line
         if isinstance(line, charmy.shape.Line):
@@ -255,7 +259,7 @@ class LineBase(template.LineBase):
                 *line.points[1], *line.points[2], *line.points[3]
                 )
         else:
-            template.not_implemented_func(Backend.friendly_name)
+            template.not_implemented_func(Backend.friendly_name, f"Drawing line type {line.type}")
         # Draw line
         window.cairo_context.stroke()
 

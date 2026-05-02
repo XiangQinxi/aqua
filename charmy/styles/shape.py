@@ -14,8 +14,9 @@ if typing.TYPE_CHECKING:
     from ..widgets.window import Window
 
 
-# Type Point
-Point = tuple[int, int]
+# Type Point / Coords
+Point: typing.TypeAlias = tuple[int, int]
+Size: typing.TypeAlias = tuple[int, int]
 
 
 # region Lines
@@ -50,11 +51,11 @@ class LinePath():
         return self
 
     @property
-    def start_point(self) -> tuple[int, int]:
+    def start_point(self) -> Point:
         raise NotImplementedError
 
     @property
-    def end_point(self) -> tuple[int, int]:
+    def end_point(self) -> Point:
         raise NotImplementedError
 
 
@@ -65,18 +66,18 @@ class Line(LinePath):
     :param points: List of the 2 points that determines the line
     """
     type: typing.ClassVar[str] = "line"
-    points: list[tuple[int, int]]
+    points: list[Point]
 
     def __post_init__(self):
         if len(self.points) != 2:
             raise ValueError("A line must be defined with and only with 2 points.")
 
     @property
-    def start_point(self) -> tuple[int, int]:
+    def start_point(self) -> Point:
         return self.points[0]
 
     @property
-    def end_point(self) -> tuple[int, int]:
+    def end_point(self) -> Point:
         return self.points[-1]
 
 @dataclass
@@ -86,7 +87,7 @@ class PolyLine(LinePath):
     :param points: List of points that determines the line(s)
     """
     type: typing.ClassVar[str] = "polyline"
-    points: list[tuple[int, int]]
+    points: list[Point]
 
     def __post_init__(self):
         if len(self.points) <= 1:
@@ -98,11 +99,11 @@ class PolyLine(LinePath):
         #     )
 
     @property
-    def start_point(self) -> tuple[int, int]:
+    def start_point(self) -> Point:
         return self.points[0]
 
     @property
-    def end_point(self) -> tuple[int, int]:
+    def end_point(self) -> Point:
         return self.points[-1]
 
 @dataclass
@@ -114,14 +115,14 @@ class CircleArc(LinePath):
     :param start_orient: Starting orientation in integer degrees
     :param end_orient: Ending orientation in integer degrees
     """
-    center: tuple[int, int]
+    center: Point
     type: typing.ClassVar[str] = "circle_arc"
     radius: int
     start_orient: int
     end_orient: int
 
     @property
-    def start_point(self) -> tuple[int, int]:
+    def start_point(self) -> Point:
         # Vibed with VSCode Copilot, model GPT-5 mini
         # Compute start point from center, radius and start_orient (degrees).
         theta = math.radians(self.start_orient)
@@ -130,7 +131,7 @@ class CircleArc(LinePath):
         return (x, y)
 
     @property
-    def end_point(self) -> tuple[int, int]:
+    def end_point(self) -> Point:
         # Vibed with VSCode Copilot, model GPT-5 mini
         # Compute end point from center, radius and end_orient (degrees).
         theta = math.radians(self.end_orient)
@@ -248,7 +249,7 @@ class EllipseArc(LinePath):
     :param start_orient: Starting orientation in integer degrees
     :param end_orient: Ending orientation in integer degrees
     """
-    center: tuple[int, int]
+    center: Point
     type: typing.ClassVar[str] = "ellipse_arc"
     v_radius: int
     h_radius: int
@@ -265,18 +266,18 @@ class EllipseArc(LinePath):
 class QuadraticBezier(LinePath):
     """Represents quadratic Bezier curves."""
     type: typing.ClassVar[str] = "quadratic_bezier"
-    points: list[tuple[int, int]]
+    points: list[Point]
 
     def __post_init__(self):
         if len(self.points) != 3:
             raise ValueError("Quadratic Bezier curves must be defined with and only with 3 points!")
 
     @property
-    def start_point(self) -> tuple[int, int]:
+    def start_point(self) -> Point:
         return self.points[0]
 
     @property
-    def end_point(self) -> tuple[int, int]:
+    def end_point(self) -> Point:
         return self.points[-1]
     
     def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5):
@@ -305,18 +306,18 @@ class QuadraticBezier(LinePath):
 class CubicBezier(LinePath):
     """Represents cubic Bezier curves."""
     type: typing.ClassVar[str] = "cubic_bezier"
-    points: list[tuple[int, int]]
+    points: list[Point]
 
     def __post_init__(self):
         if len(self.points) != 4:
             raise ValueError("Cubic Bezier curves must be defined with and only with 4 points!")
 
     @property
-    def start_point(self) -> tuple[int, int]:
+    def start_point(self) -> Point:
         return self.points[0]
 
     @property
-    def end_point(self) -> tuple[int, int]:
+    def end_point(self) -> Point:
         return self.points[-1]
 
 # endregion
@@ -327,6 +328,7 @@ class CharmyShapeError(Exception): ...
 
 class AnyShape():
     """Base class of all shapes."""
+    type: str = "any_shape"
 
     def __init__(self, lines: list[LinePath]):
         """To represent a shape.
@@ -342,7 +344,7 @@ class AnyShape():
 
     def _validate_lines(self):
         """Validate if lines form a valid closed shape."""
-        last_line_end: tuple[int, int] = self.lines[-1].end_point
+        last_line_end: Point = self.lines[-1].end_point
         # 👆 Set last_line_end to end point of the last line, a valid shape must be closed.
         for line in self.lines:
             if line.start_point != last_line_end:
@@ -354,9 +356,33 @@ class AnyShape():
     def draw(self, window: Window, texture: Texture | TextureLike, 
              border_width: int = 0, border_texture: Texture | TextureLike = None):
         """Draw the shape using backend."""
-        window.backend_base.drawing_list.append(
-            DrawnShape(self, texture, border_width, border_texture)
-            )
+        if self.type in window.backend_base.backend.ShapeBase.supports:
+            window.backend_base.drawing_list.append(
+                DrawnShape(self, texture, border_width, border_texture)
+                )
+
+class Rect(AnyShape):
+    """Represents rectangles in Charmy."""
+    type: str = "rect"
+
+    def __init__(self, position: Point, size: Size):
+        """To initialize a rectangle.
+        
+        :param position: The position of the rectangle
+        :param size: The size of the rectangle
+        """
+        self.position: Point = position
+        self.size: Size = size
+
+    @property
+    def lines(self):
+        polyline = PolyLine([
+            (self.position[0], self.position[1]), 
+            (self.position[0] + self.size[0], self.position[1]), 
+            (self.position[0] + self.size[0], self.position[1] + self.size[1]), 
+            (self.position[0], self.position[1] + self.size[1]), 
+            ])
+        return [polyline]
 
 # endregion
 

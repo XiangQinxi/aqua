@@ -1,5 +1,5 @@
 # The Genesis Backend
-# 2026 by XiangQinXi & rgzz666
+# 2026 by rgzz666 & XiangQinXi & CodeCrafter
 
 # This is a backend for early development only! 
 # It is also used as an example of developing a Charmy backend.
@@ -33,19 +33,20 @@ class Backend(template.Backend):
     name: typing.ClassVar[str] =            "genesis"
     friendly_name: typing.ClassVar[str] =   "Genesis (early development)"
     version: typing.ClassVar[str] =         "0.1.0"
-    author: typing.ClassVar[list[str]] =    ["XiangQinXi", "rgzz666"]
+    author: typing.ClassVar[list[str]] =    ["rgzz666", "XiangQinXi", "CodeCrafter"]
+
+    WindowBase: type[WindowBase]
+    LineBase: type[LineBase]
+    ShapeBase: type[ShapeBase]
+    TextureBase: type[TextureBase]
 
     def __init__(self):
         """APIs are aliased here."""
         super().__init__()
-
-        self.WindowBase: type[WindowBase] = WindowBase
-        self.LineBase: type[LineBase] = LineBase
-        self.ShapeBase: type[ShapeBase] = ShapeBase
-        self.TextureBase: type[TextureBase] = TextureBase
     
     def backend_init(self, **kwargs) -> None:
-        sdl2.ext.init()
+        # sdl2.ext.init()
+        return
 
 
 class WindowBackdropSupportState(template.WindowBackdropSupportState):
@@ -74,7 +75,7 @@ class WindowSupportState(template.WindowSupportState):
 
 class WindowBase(template.WindowBase):
     """Window APIs in Genesis backend."""
-    supports = WindowSupportState
+    supports = WindowSupportState()
     Backend = Backend
 
     def __init__(self, backend: template.Backend):
@@ -179,28 +180,12 @@ class WindowBase(template.WindowBase):
                 LineBase.draw_line(drawing_obj.line, self, drawing_obj.texture, drawing_obj.width)
             else:
                 template.not_implemented_func(Backend.friendly_name)
-        # # Test code for drawing, vibed with Doubao or Deepseek (whatever, I forgot)
-
-        # self.cairo_context.set_source_rgba(1, 1, 1, 0)
-        # self.cairo_context.paint()
-        
-        # # 绘制红色圆形
-        # self.cairo_context.set_source_rgb(1, 0, 0)  # 完全不透明的红色
-        # self.cairo_context.arc(270, 240, 80, 0, 6.28)
-        # self.cairo_context.fill()
-        
-        # # 可选：添加边框让圆形更明显
-        # self.cairo_context.set_source_rgb(0, 0, 0)
-        # self.cairo_context.arc(270, 240, 80, 0, 6.28)
-        # self.cairo_context.set_line_width(2)
-        # self.cairo_context.stroke()
     
     def mainloop(self):
         while True:
             self.update()
 
 
-@dataclass
 class LineSupportState(template.LineSupportState):
     """Flags all supported line types."""
     line                : bool = True
@@ -269,3 +254,13 @@ class ShapeBase(template.ShapeBase):
 
 class TextureBase(template.TextureBase):
     pass
+
+
+# region: Alias WhateverBase classes
+
+Backend.WindowBase = WindowBase
+Backend.LineBase = LineBase
+Backend.ShapeBase = ShapeBase
+Backend.TextureBase = TextureBase
+
+# endregion

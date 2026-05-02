@@ -1,7 +1,7 @@
 from __future__ import annotations as _
 import typing
 
-from dataclasses import dataclass
+# from dataclasses import dataclass
 import warnings
 
 if typing.TYPE_CHECKING:
@@ -39,9 +39,10 @@ class Backend():
     def __init__(self):
         """APIs are aliased here."""
         # Make alias for WhateverBase classes
-        self.WindowBase = WindowBase
-        self.LineBase = LineBase
-        self.TextureBase = TextureBase
+        self.WindowBase: type[WindowBase] = WindowBase
+        self.LineBase: type[LineBase] = LineBase
+        self.ShapeBase: type[ShapeBase] = ShapeBase
+        self.TextureBase: type[TextureBase] = TextureBase
     
     def backend_init(self) -> None:
         return None
@@ -112,7 +113,7 @@ class WindowSupportState(SupportState):
     set_scale_mode          : bool = False
     set_background          : bool = False
     translucent             : bool = False
-    backdrop                : type[WindowBackdropSupportState] = WindowBackdropSupportState
+    backdrop                : WindowBackdropSupportState = WindowBackdropSupportState()
     set_state               : bool = False
     fullscreen              : bool = False
     customize_titlebar      : bool = False
@@ -120,7 +121,7 @@ class WindowSupportState(SupportState):
 class WindowBase(WhateverBase):
     """Base of the windows, abstracts window-level operations from the base UI lib."""
 
-    supports: type[WindowSupportState] = WindowSupportState
+    supports: WindowSupportState = WindowSupportState()
 
     def __init__(self, backend: Backend) -> None:
         """Initializes the dummy window.
@@ -170,7 +171,6 @@ class WindowBase(WhateverBase):
         return self
 
 
-@dataclass
 class LineSupportState(SupportState):
     """Flags support state of line types of this backend."""
     line                : bool = False
@@ -230,7 +230,6 @@ class ShapeBase():
         not_implemented_func(Backend.friendly_name)
 
 
-@dataclass
 class TextureSupportState(SupportState):
     color           : bool = False
     filter          : bool = False

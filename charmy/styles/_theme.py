@@ -8,7 +8,7 @@ import re
 import typing
 import warnings
 
-from . import Texture
+from . import texture
 
 if typing.TYPE_CHECKING:
     # from .。widgets.widget import CWidget

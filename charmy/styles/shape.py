@@ -235,6 +235,8 @@ class CircleArc(LinePath):
 class EllipseArc(LinePath):
     """Represents arcs trimmed from ellipses.
 
+    Note that this is NOT IMPLEMENTED and NOT PLANNED currently. You may see this as avandoned codes.
+
     :param center: Coordinates of the center of the oval
     :param v_radius: Vertical radius in integer
     :param h_radius: Horizontal radius in integer

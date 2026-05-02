@@ -6,6 +6,8 @@
 
 # Under dev
 
+from __future__ import annotations as _
+
 import typing
 
 from dataclasses import dataclass

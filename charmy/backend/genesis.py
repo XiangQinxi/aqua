@@ -84,8 +84,8 @@ class WindowBase(template.WindowBase):
         """
         super().__init__(backend)
 
-        self.title = "Charmy SDL2 Window"
-        self.size = (540, 480)
+        self.title: str = "Charmy SDL2 Window"
+        self.size: tuple[int, int] = (540, 480)
 
 
         # create window
@@ -101,8 +101,7 @@ class WindowBase(template.WindowBase):
             raise RuntimeError("Can't create window")
         self._window_surface = sdl2.SDL_GetWindowSurface(self.window)
 
-        if self.window == None:
-            raise RuntimeError("Can't create window")
+        # sdl2.SDL_SetWindowSize(self.window, self.size[0], self.size[1])
 
         # Initialize Cairo canvas
         self.surface: cairo.ImageSurface = cairo.ImageSurface(
@@ -177,7 +176,7 @@ class WindowBase(template.WindowBase):
         """
         for drawing_obj in drawing_list:
             if isinstance(drawing_obj, charmy.shape.DrawnLine):
-                LineBase.draw_line(drawing_obj.line, self, drawing_obj.texture)
+                LineBase.draw_line(drawing_obj.line, self, drawing_obj.texture, drawing_obj.width)
             else:
                 template.not_implemented_func(Backend.friendly_name)
         # # Test code for drawing, vibed with Doubao or Deepseek (whatever, I forgot)

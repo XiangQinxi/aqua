@@ -73,8 +73,8 @@ class WhateverBase():
 class SupportState():
     """To flag which features this backend supports."""
 
-    def __contains__(self, item):
-        return item in self.__dict__
+    def __contains__(self, item: str) -> bool:
+        return getattr(self, item)
 
     pass
 

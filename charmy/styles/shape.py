@@ -72,6 +72,22 @@ class Line(LinePath):
         if len(self.points) != 2:
             raise ValueError("A line must be defined with and only with 2 points.")
 
+    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5):
+        """Draw polylines and fallback to list of lines if backend not supported.
+
+        :param window: The window to draw line to
+        :param texture: The texture of the line
+        :param width: Line width in pixels
+        """
+        backend = window.backend_base.backend
+        if (not backend.LineBase.supports.line) and backend.LineBase.supports.polyline:
+            # If backend not supports line but supports polyline
+            # Fall back to polyline if backend not supported
+            PolyLine(self.points).draw(window, texture, width)
+        else:
+            # Either draw the line or show not supported warning
+            LinePath.draw(self, window, texture, width)
+
     @property
     def start_point(self) -> Point:
         return self.points[0]
@@ -97,6 +113,29 @@ class PolyLine(LinePath):
         #         "Consider using Line for exactly 2 points (although using PolyLine still works).",
         #         stacklevel=2
         #     )
+
+
+    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5):
+        """Draw polylines and fallback to list of lines if backend not supported.
+
+        :param window: The window to draw line to
+        :param texture: The texture of the line
+        :param width: Line width in pixels
+        """
+        backend = window.backend_base.backend
+        if (not backend.LineBase.supports.polyline) and backend.LineBase.supports.line:
+            # If backend not supports polyline but supports line
+            # Fall back to multiple lines if backend not supported
+            lines: list[Line] = []
+            for point_index in range(len(self.points)):
+                if point_index == 0:
+                    continue
+                lines.append(Line([self.points[point_index - 1], self.points[point_index]]))
+            for line in lines:
+                line.draw(window, texture, width)
+        else:
+            # Either draw the line or show not supported warning
+            LinePath.draw(self, window, texture, width)
 
     @property
     def start_point(self) -> Point:

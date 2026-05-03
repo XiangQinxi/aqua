@@ -230,7 +230,9 @@ class LineBase(template.LineBase):
             window.cairo_context.line_to(*line.points[1])
         elif isinstance(line, charmy.shape.PolyLine):
             window.cairo_context.move_to(*line.points[0])
-            for point in line.points:
+            for index, point in enumerate(line.points):
+                if index == 0:
+                    continue
                 window.cairo_context.line_to(*point)
         elif isinstance(line, charmy.shape.CircleArc):
             # window.cairo_context.move_to(*line.center)

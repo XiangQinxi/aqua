@@ -1,3 +1,8 @@
+"""The Charmy Bible.
+
+Read it once a day to pay respect to Charmy developers.
+"""
+
 THE_POEM = """
 ====================================
           THE CHARMY BIBLE          

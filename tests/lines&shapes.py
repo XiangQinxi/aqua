@@ -1,4 +1,5 @@
 import charmy as cm
+from charmy.this import THE_POEM as charmy_bible # For later text rendering test (maybe)
 
 
 window = cm.Window(size=(540, 480))

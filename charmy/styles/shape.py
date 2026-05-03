@@ -10,8 +10,8 @@ arcs (not implemented), quadratic Bezier curves and cubic Bezier curves.
 Each `LinePath` object can either be used to express a path, to be used to express a part of a 
 shape, or to be drawn on a window directly. Paths expressed by lines may be used in animations in 
 the future; shapes expressed by a list of lines can be drawn (see Shape section below); lines that 
-are drawn directly are called `DrawnLines`, which can have their texture and line width be 
-specified and adjusted.
+are drawn directly are called `DrawnLine`, which can have their texture and line width be specified 
+and adjusted.
 
 Shapes
 ------

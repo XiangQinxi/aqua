@@ -330,7 +330,10 @@ class EllipseArc(LinePath):
 
 @dataclass
 class QuadraticBezier(LinePath):
-    """Represents quadratic Bezier curves."""
+    """Represents quadratic Bezier curves.
+
+    :param points: List of the 3 points that determines the curve.
+    """
     type: typing.ClassVar[str] = "quadratic_bezier"
     points: list[Point]
 
@@ -370,7 +373,10 @@ class QuadraticBezier(LinePath):
 
 @dataclass
 class CubicBezier(LinePath):
-    """Represents cubic Bezier curves."""
+    """Represents cubic Bezier curves.
+
+    :param points: List of the 3 points that determines the curve.
+    """
     type: typing.ClassVar[str] = "cubic_bezier"
     points: list[Point]
 
@@ -468,6 +474,12 @@ class DrawnLine():
     width: int = 5
 
     def __init__(self, line: LinePath, texture: Texture | TextureLike, width: int = 5):
+        """Used to express lines drawn on GUI or canvas.
+
+        :param line: The line (to be drawn)
+        :param texture: Texture of the drawn line
+        :param width: Line width
+        """
         self.line = line
         self.texture = texture
         self.width = width
@@ -495,6 +507,13 @@ class DrawnShape():
 
     def __init__(self, shape: AnyShape, texture: Texture | TextureLike, 
                  border_width: int = 5, border_texture: Texture | TextureLike = None):
+        """Used to express shapes drawn on GUI or canvas.
+
+        :param shape: The shape (to be drawn)
+        :param texture: Texture inside the drawn shape
+        :param border_width: Border width in px, positive for outter and negative for inner
+        :param border_texture: Texture of the drawn border
+        """
         self.shape = shape
         self.texture = texture
         self.border_width = border_width

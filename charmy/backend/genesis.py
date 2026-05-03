@@ -196,7 +196,7 @@ class LineSupportState(template.LineSupportState):
     cubic_bezier        : bool = True
 
 class LineBase(template.LineBase):
-    """Represents lines in backend."""
+    """Line-related APIs in backend."""
     supports: LineSupportState = LineSupportState()
 
     @staticmethod
@@ -252,7 +252,7 @@ class LineBase(template.LineBase):
 
 
 class ShapeBase(template.ShapeBase):
-    pass
+    """Shape-related APIs in backend."""
 
 class TextureBase(template.TextureBase):
     pass

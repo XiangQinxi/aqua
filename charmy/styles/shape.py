@@ -1,3 +1,30 @@
+"""Charmy lines and shapes APIs.
+
+This module implements Charmy's ability to express and draw lines and shapes.
+
+Lines
+-----
+Lines are devided into following types: lines for straight lines, polylines, circle arcs, ellipse 
+arcs (not implemented), quadratic Bezier curves and cubic Bezier curves.
+
+Each `LinePath` object can either be used to express a path, to be used to express a part of a 
+shape, or to be drawn on a window directly. Paths expressed by lines may be used in animations in 
+the future; shapes expressed by a list of lines can be drawn (see Shape section below); lines that 
+are drawn directly are called `DrawnLines`, which can have their texture and line width be 
+specified and adjusted.
+
+Shapes
+------
+In Charmy, all shapes can be expressed by a sequence of lines. Shapes are devided into following 
+types: (...TO BE WRITTEN...). Backends that does not support drawing `any_shape` (line-sequence-
+expressed shapes) will be able to draw some of the other shape types directly using its drawing 
+module's API.
+
+Each `Shape` object can either be used to express a shape of a widget or be drawn on a window. 
+Shapes that are drawn on windows are called `DrawnShape`, which can have their inside texture, 
+border width, and border texture be specified and adjusted.
+"""
+
 from __future__ import annotations as _
 
 import typing
@@ -394,7 +421,13 @@ class AnyShape():
 
     def draw(self, window: Window, texture: Texture | TextureLike, 
              border_width: int = 0, border_texture: Texture | TextureLike = None):
-        """Draw the shape using backend."""
+        """Draw the shape using backend.
+
+        :param window: The window to draw shape to
+        :param texture: Texture within the shape
+        :param border_width: Width of border line in px, positive for outter and negative for inner
+        :param border_texture: Texture used on border
+        """
         if self.type in window.backend_base.backend.ShapeBase.supports:
             window.backend_base.drawing_list.append(
                 DrawnShape(self, texture, border_width, border_texture)
@@ -414,7 +447,7 @@ class Rect(AnyShape):
         self.size: Size = size
 
     @property
-    def lines(self):
+    def lines(self) -> list[LinePath]:
         polyline = PolyLine([
             (self.position[0], self.position[1]), 
             (self.position[0] + self.size[0], self.position[1]), 

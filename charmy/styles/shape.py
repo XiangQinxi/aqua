@@ -99,7 +99,7 @@ class Line(LinePath):
         if len(self.points) != 2:
             raise ValueError("A line must be defined with and only with 2 points.")
 
-    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5):
+    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw polylines and fallback to list of lines if backend not supported.
 
         :param window: The window to draw line to
@@ -114,6 +114,7 @@ class Line(LinePath):
         else:
             # Either draw the line or show not supported warning
             LinePath.draw(self, window, texture, width)
+        return self
 
     @property
     def start_point(self) -> Point:
@@ -142,7 +143,7 @@ class PolyLine(LinePath):
         #     )
 
 
-    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5):
+    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw polylines and fallback to list of lines if backend not supported.
 
         :param window: The window to draw line to
@@ -163,6 +164,7 @@ class PolyLine(LinePath):
         else:
             # Either draw the line or show not supported warning
             LinePath.draw(self, window, texture, width)
+        return self
 
     @property
     def start_point(self) -> Point:
@@ -349,7 +351,7 @@ class QuadraticBezier(LinePath):
     def end_point(self) -> Point:
         return self.points[-1]
     
-    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5):
+    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw the quadratic Bezier, convert to cubic Bezier curves if backend does not support.
         
         :param window: The window to draw line to
@@ -370,6 +372,7 @@ class QuadraticBezier(LinePath):
                  int(round(p2[1] + k*(p1[1] - p2[1]), 0))),
                 p2
             ]).draw(window, texture, width)
+        return self
 
 @dataclass
 class CubicBezier(LinePath):
@@ -426,7 +429,7 @@ class AnyShape():
         return True
 
     def draw(self, window: Window, texture: Texture | TextureLike, 
-             border_width: int = 0, border_texture: Texture | TextureLike = None):
+             border_width: int = 0, border_texture: Texture | TextureLike = None) -> typing.Self:
         """Draw the shape using backend.
 
         :param window: The window to draw shape to
@@ -434,10 +437,12 @@ class AnyShape():
         :param border_width: Width of border line in px, positive for outter and negative for inner
         :param border_texture: Texture used on border
         """
-        if self.type in window.backend_base.backend.ShapeBase.supports:
+        backend = window.backend_base.backend
+        if self.type in backend.ShapeBase.supports or "any_shape" in backend.ShapeBase.supports:
             window.backend_base.drawing_list.append(
                 DrawnShape(self, texture, border_width, border_texture)
                 )
+        return self
 
 class Rect(AnyShape):
     """Represents rectangles in Charmy."""
@@ -459,8 +464,69 @@ class Rect(AnyShape):
             (self.position[0] + self.size[0], self.position[1]), 
             (self.position[0] + self.size[0], self.position[1] + self.size[1]), 
             (self.position[0], self.position[1] + self.size[1]), 
+            (self.position[0], self.position[1]), 
             ])
         return [polyline]
+
+class RoundRect(AnyShape):
+    """Represents round-corner rectangles in Charmy."""
+    type: str = "round_rect"
+
+    def __init__(self, position: Point, size: Size, radius: int | tuple[int, int, int, int]):
+        """To initialize a round-corner rectangle.
+        
+        :param position: The position of the round-corner rectangle
+        :param size: The size of the round-corner rectangle
+        :param radius: Radius of the round corners or of each corner, in px
+        """
+        self.position: Point = position
+        self.size: Size = size
+        self.radius: int | tuple[int, int, int, int] = radius
+
+    @property
+    def lines(self) -> list[LinePath]:
+        radii: tuple[int, int, int, int]
+        if isinstance(self.radius, int):
+            radii = (self.radius, self.radius, self.radius, self.radius)
+        else:
+            radii = self.radius
+        return [
+            Line([
+                (self.position[0] + radii[0], self.position[1]), # top-left
+                (self.position[0] + self.size[0] - radii[1], self.position[1]) # top-right
+                ]), 
+            CircleArc( # top-right corner
+                (self.position[0] + self.size[0] - radii[1], self.position[1] + radii[1]), 
+                radii[1], 0, 90
+                ), 
+            Line([
+                (self.position[0] + self.size[0], self.position[1] + radii[1]), # right-top
+                (self.position[0] + self.size[0], 
+                 self.position[1] + self.size[1] - radii[2]) # right-bottom
+                ]), 
+            CircleArc( # buttom-right corner
+                (self.position[0] + self.size[0] - radii[2], 
+                 self.position[1] + self.size[1] - radii[2]), 
+                 radii[2], 90, 180
+                 ), 
+            Line([
+                (self.position[0] + self.size[0] - radii[2], 
+                 self.position[1] + self.size[1]), # bottom-right
+                (self.position[0] + radii[3], self.position[1] + self.size[1]) # bottom-left
+                ]), 
+            CircleArc( # bottom-left
+                (self.position[0] + radii[3], self.position[1] + self.size[1] - radii[3]), 
+                radii[3], 180, 270
+                ), 
+            Line([
+                (self.position[0], self.position[1] + self.size[1] - radii[3]), # left-bottom
+                (self.position[0], self.position[1] + radii[0]) # left-top
+                ]), 
+            CircleArc(
+                (self.position[0] + radii[0], self.position[1] + radii[0]), 
+                radii[0], 270, 360
+                )
+            ]
 
 # endregion
 

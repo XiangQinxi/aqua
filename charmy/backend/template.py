@@ -74,7 +74,10 @@ class SupportState():
     """To flag which features this backend supports."""
 
     def __contains__(self, item: str) -> bool:
-        return getattr(self, item)
+        if hasattr(self, item):
+            return getattr(self, item)
+        else:
+            return False
 
     pass
 
@@ -233,12 +236,16 @@ class ShapeBase():
 
 class TextureSupportState(SupportState):
     color           : bool = False
+    linear_gradient : bool = False
+    radial_gradient : bool = False
     filter          : bool = False
     image           : bool = False
     func_shader     : bool = False
 
 class TextureBase():
-    pass
+    def __init__(self, *args, **kwargs):
+        """Not supposed to be instantiated."""
+        raise RuntimeError("TextureBase is used to hold APIs, but not supposed to be instantiated.")
 
 
 # region: Alias WhateverBase classes

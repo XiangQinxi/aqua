@@ -20,11 +20,11 @@ import math
 
 from . import template
 
-import charmy
+import charmy.backend.utils as charmy_stuff
 
 # if typing.TYPE_CHECKING:
-#     import charmy.styles.shape as charmy.shape
-#     import charmy.styles.texture as cm_texture
+#     import charmy_stuff.styles.shape as charmy_stuff.shape
+#     import charmy_stuff.styles.texture as cm_texture
 
 
 class Backend(template.Backend):
@@ -108,6 +108,8 @@ class WindowBase(template.WindowBase):
         self.surface: cairo.ImageSurface = cairo.ImageSurface(
             cairo.FORMAT_ARGB32, self.size[0], self.size[1])
         self.cairo_context: cairo.Context = cairo.Context(self.surface)
+        self.cairo_context.set_line_join(cairo.LINE_JOIN_ROUND)
+        self.cairo_context.set_line_cap(cairo.LINE_CAP_ROUND)
         self.cairo_context.set_source_rgba(0, 0, 0, 0)  # Transparent back
         self.cairo_context.paint()
 
@@ -170,16 +172,21 @@ class WindowBase(template.WindowBase):
                     NotImplemented
 
     def draw_frame(self, 
-                   drawing_list: list[charmy.shape.DrawnShape | charmy.shape.DrawnLine]) -> None:
+                   drawing_list: list[charmy_stuff.shape.DrawnShape | charmy_stuff.shape.DrawnLine]) -> None:
         """Draw a frame for the window.
         
         :param drawing_list: The list of the objects to draw
         """
         for drawing_obj in drawing_list:
-            if isinstance(drawing_obj, charmy.shape.DrawnLine):
+            if isinstance(drawing_obj, charmy_stuff.shape.DrawnLine):
                 LineBase.draw_line(drawing_obj.line, self, drawing_obj.texture, drawing_obj.width)
+            elif isinstance(drawing_obj, charmy_stuff.shape.DrawnShape):
+                ShapeBase.draw_shape(drawing_obj.shape, self, drawing_obj.texture, 
+                                     drawing_obj.border_width, drawing_obj.border_texture)
             else:
-                template.not_implemented_func(Backend.friendly_name)
+                template.not_implemented_func(
+                    Backend.friendly_name, f"Drawing object type {drawing_obj.__class__.__name__}"
+                    )
     
     def mainloop(self):
         while True:
@@ -200,8 +207,9 @@ class LineBase(template.LineBase):
     supports: LineSupportState = LineSupportState()
 
     @staticmethod
-    def draw_line(line: charmy.shape.LinePath, window: WindowBase, 
-                  texture: charmy.texture.Texture, line_width: int = 5):
+    def draw_line(line: charmy_stuff.shape.LinePath, window: WindowBase, 
+                  texture: charmy_stuff.texture.Texture, line_width: int = 5, 
+                  stroke: bool = True):
         """To draw a line on a specific window.
 
         Args:
@@ -215,47 +223,112 @@ class LineBase(template.LineBase):
                 f"{window.backend.friendly_name} but I serve backend {Backend.friendly_name}!"
                 )
         # Set texture & line width
-        if isinstance(texture, charmy.texture.Transparent):
-            return # Skip drawing transparent stuff
-        elif isinstance(texture, charmy.texture.Color):
-            window.cairo_context.set_source_rgba(*[v / 255 for v in texture])
-        else:
-            template.not_implemented_func(
-                Backend.friendly_name, f"Drawing texture type {texture.__class__.__name__}"
-                )
+        if not TextureBase.cairo_set_context_texture(window.cairo_context, texture):
+            return
         window.cairo_context.set_line_width(line_width)
         # Draw line
-        if isinstance(line, charmy.shape.Line):
-            window.cairo_context.move_to(*line.points[0])
+        if isinstance(line, charmy_stuff.shape.Line):
+            painting_pos = tuple([int(v) for v in window.cairo_context.get_current_point()])
+            if painting_pos != line.points[0]: # Avoid unnecessary move_to() when drawing shapes
+                window.cairo_context.move_to(*line.points[0])
             window.cairo_context.line_to(*line.points[1])
-        elif isinstance(line, charmy.shape.PolyLine):
+        elif isinstance(line, charmy_stuff.shape.PolyLine):
             window.cairo_context.move_to(*line.points[0])
             for index, point in enumerate(line.points):
                 if index == 0:
                     continue
                 window.cairo_context.line_to(*point)
-        elif isinstance(line, charmy.shape.CircleArc):
+        elif isinstance(line, charmy_stuff.shape.CircleArc):
             # window.cairo_context.move_to(*line.center)
             start_orient_rad = (line.start_orient - 90) * (math.pi / 180)
             end_orient_rad = (line.end_orient - 90) * (math.pi / 180)
             window.cairo_context.arc(line.center[0], line.center[1], line.radius, 
                                      start_orient_rad, end_orient_rad)
-        elif isinstance(line, charmy.shape.CubicBezier):
+        elif isinstance(line, charmy_stuff.shape.CubicBezier):
             window.cairo_context.move_to(*line.points[0])
             window.cairo_context.curve_to(
                 *line.points[1], *line.points[2], *line.points[3]
                 )
         else:
             template.not_implemented_func(Backend.friendly_name, f"Drawing line type {line.type}")
-        # Draw line
-        window.cairo_context.stroke()
+        if stroke:
+            window.cairo_context.stroke()
 
+
+class ShapeSupportState(template.ShapeSupportState):
+    """Flags support state of shape types of this backend."""
+    any_shape       : bool = True
+    rect            : bool = False
+    round_rect      : bool = False
+    polygon         : bool = False
+    oval            : bool = False
+    sector          : bool = False
 
 class ShapeBase(template.ShapeBase):
     """Shape-related APIs in backend."""
+    supports: ShapeSupportState = ShapeSupportState()
+
+    @staticmethod
+    def draw_any_shape(shape: charmy_stuff.shape.AnyShape, window: WindowBase, 
+                       texture: charmy_stuff.texture.Texture, border_width: int = 0, 
+                       border_texture: charmy_stuff.texture.Texture = \
+                        charmy_stuff.texture.Transparent()):
+        """Draw shape by lines."""
+        for line in shape.lines: # Border drawn at this time will be covered by shape itself
+            # These lines are for drawing the shape itself, not for border
+            LineBase.draw_line(line, window, texture, 1, stroke=False)
+        window.cairo_context.close_path()
+        if TextureBase.cairo_set_context_texture(window.cairo_context, texture):
+            window.cairo_context.fill()
+        window.cairo_context.stroke()
+        if TextureBase.cairo_set_context_texture(window.cairo_context, border_texture) and \
+           border_width != 0:
+            # If still need visible border, then draw again
+            for line in shape.lines:
+                LineBase.draw_line(line, window, border_texture, border_width)
+
+    @staticmethod
+    def draw_shape(shape: charmy_stuff.shape.AnyShape, window: WindowBase, 
+                   texture: charmy_stuff.texture.Texture, border_width: int = 0, 
+                   border_texture: charmy_stuff.texture.Texture = \
+                    charmy_stuff.texture.Transparent()):
+        if isinstance(shape, charmy_stuff.shape.AnyShape):
+            ShapeBase.draw_any_shape(shape, window, texture, border_width, border_texture)
+
+
+class TextureSupportState(template.TextureSupportState):
+    color           : bool = False
+    linear_gradient : bool = False
+    radial_gradient : bool = False
+    filter          : bool = False
+    image           : bool = False
+    func_shader     : bool = False
 
 class TextureBase(template.TextureBase):
-    pass
+    """Texture-related APIs in backend."""
+
+    @staticmethod
+    def cairo_set_context_texture(context: cairo.Context, 
+                                  texture: charmy_stuff.texture.Texture) -> bool:
+        """Set texture of a Cairo context, and returns if following drawing still needs to be done. 
+        
+        function only available in Genesis backend.
+
+        :param context: The Cairo context to set texture
+        :param texture: The texture to set
+        :return bool: If the object needs to be drawn
+        """
+        cmtx = charmy_stuff.texture
+        if isinstance(texture, cmtx.Transparent):
+            context.set_source_rgba(0, 0, 0, 0)
+            return False
+        if isinstance(texture, cmtx.Color):
+            context.set_source_rgba(*[v / 255 for v in texture])
+        else:
+            template.not_implemented_func(
+                Backend.friendly_name, f"Drawing texture type {texture.__class__.__name__}"
+                )
+        return True
 
 
 # region: Alias WhateverBase classes

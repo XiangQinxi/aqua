@@ -1,7 +1,7 @@
 import typing
 
 # from ..const import Drawing
-from ..object import CharmyObject
+# from ..object import CharmyObject as _CharmyObject
 
 
 # region Texture base class

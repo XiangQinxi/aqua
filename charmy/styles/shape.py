@@ -4,7 +4,7 @@ This module implements Charmy's ability to express and draw lines and shapes.
 
 Lines
 -----
-Lines are devided into following types: lines for straight lines, polylines, circle arcs, ellipse 
+Lines are divided into following types: lines for straight lines, polylines, circle arcs, ellipse
 arcs (not implemented), quadratic Bezier curves and cubic Bezier curves.
 
 Each `LinePath` object can either be used to express a path, to be used to express a part of a 
@@ -15,7 +15,7 @@ and adjusted.
 
 Shapes
 ------
-In Charmy, all shapes can be expressed by a sequence of lines. Shapes are devided into following 
+In Charmy, all shapes can be expressed by a sequence of lines. Shapes are divided into following
 types: (...TO BE WRITTEN...). Backends that does not support drawing `any_shape` (line-sequence-
 expressed shapes) will be able to draw some of the other shape types directly using its drawing 
 module's API.
@@ -49,7 +49,7 @@ Size: typing.TypeAlias = tuple[int, int]
 # region Lines
 
 @dataclass
-class LinePath():
+class LinePath:
     """Base class of all line paths."""
 
     type: typing.ClassVar[str] = "line_path_class"
@@ -196,7 +196,7 @@ class CircleArc(LinePath):
         theta = math.radians(self.start_orient)
         x = self.center[0] + int(round(self.radius * math.cos(theta)))
         y = self.center[1] + int(round(self.radius * math.sin(theta)))
-        return (x, y)
+        return x, y
 
     @property
     def end_point(self) -> Point:
@@ -205,7 +205,7 @@ class CircleArc(LinePath):
         theta = math.radians(self.end_orient)
         x = self.center[0] + int(round(self.radius * math.cos(theta)))
         y = self.center[1] + int(round(self.radius * math.sin(theta)))
-        return (x, y)
+        return x, y
 
     def draw(self, window:Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw the circle arc, convert to Bezier curves if backend does not support.
@@ -224,7 +224,7 @@ class CircleArc(LinePath):
         return self
 
     def _arc_to_beziers(self) -> list[CubicBezier]:
-        """Convert an circle arc into a list of cubic Bézier curves.
+        """Convert a circle arc into a list of cubic Bézier curves.
 
         This function is vibed with ChatGPT.
 
@@ -277,7 +277,7 @@ class CircleArc(LinePath):
             cos0, sin0 = math.cos(t0), math.sin(t0)
             cos1, sin1 = math.cos(t1), math.sin(t1)
 
-            # For y coods, must use negative operations, because y-axis is reversed on a window
+            # For y cords, must use negative operations, because y-axis is reversed on a window
 
             # Endpoints
             x0: int = int(round(cx + self.radius * cos0, 0))
@@ -401,7 +401,7 @@ class CubicBezier(LinePath):
 
 class CharmyShapeError(Exception): ...
 
-class AnyShape():
+class AnyShape:
     """Base class of all shapes."""
     type: str = "any_shape"
 
@@ -434,7 +434,7 @@ class AnyShape():
 
         :param window: The window to draw shape to
         :param texture: Texture within the shape
-        :param border_width: Width of border line in px, positive for outter and negative for inner
+        :param border_width: Width of borderline in px, positive for outer and negative for inner
         :param border_texture: Texture used on border
         """
         backend = window.backend_base.backend
@@ -504,7 +504,7 @@ class RoundRect(AnyShape):
                 (self.position[0] + self.size[0], 
                  self.position[1] + self.size[1] - radii[2]) # right-bottom
                 ]), 
-            CircleArc( # buttom-right corner
+            CircleArc( # bottom-right corner
                 (self.position[0] + self.size[0] - radii[2], 
                  self.position[1] + self.size[1] - radii[2]), 
                  radii[2], 90, 180
@@ -533,7 +533,7 @@ class RoundRect(AnyShape):
 # region Drawn Lines / Shapes
 
 @dataclass
-class DrawnLine():
+class DrawnLine:
     """A class used to represent lines drawn to windows."""
     line: LinePath
     _texture: Texture
@@ -543,8 +543,7 @@ class DrawnLine():
         """Used to express lines drawn on GUI or canvas.
 
         :param line: The line (to be drawn)
-        :param texture: Texture of the drawn line
-        :param width: Line width
+        :param texture: Texture of the drawn line        :param width:  width
         """
         self.line = line
         self.texture = texture
@@ -564,7 +563,7 @@ class DrawnLine():
 
 
 @dataclass
-class DrawnShape():
+class DrawnShape:
     """A Class used to represent shapes drawn to windows"""
     shape: AnyShape
     _texture: Texture
@@ -577,7 +576,7 @@ class DrawnShape():
 
         :param shape: The shape (to be drawn)
         :param texture: Texture inside the drawn shape
-        :param border_width: Border width in px, positive for outter and negative for inner
+        :param border_width: Border width in px, positive for outer and negative for inner
         :param border_texture: Texture of the drawn border
         """
         self.shape = shape

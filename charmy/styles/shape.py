@@ -60,10 +60,11 @@ class LinePath():
         :param window: The window to draw line to
         :param texture: The texture of the line
         :param width: Line width in pixels
+        :return self: The line itself
         """
         backend = window.backend_base.backend
         # 👆 Alias to avoid path to backend properties getting too long. 😅
-        if self.type == "line_path_class":
+        if type(self) is LinePath:
             raise TypeError("LinePath class is a template, cannot be drawn.")
         else:
             if self.type in backend.LineBase.supports:
@@ -73,7 +74,20 @@ class LinePath():
                     )
                 # backend.LineBase.draw_line(self, window, texture)
             else:
-                warnings.warn(f"Line type {self.type} is not supported by "
+                self._draw_fallback(window, texture, width)
+        return self
+
+    def _draw_fallback(self, 
+                    window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
+        """Fallback ability of the line.
+
+        :param window: The window to draw line to
+        :param texture: The texture of the line
+        :param width: Line width in pixels
+        :return self: The line itself
+        """
+        backend = window.backend_base.backend
+        warnings.warn(f"Line type {self.type} is not supported by "
                               f"backend {backend.friendly_name}")
         return self
 
@@ -99,21 +113,22 @@ class Line(LinePath):
         if len(self.points) != 2:
             raise ValueError("A line must be defined with and only with 2 points.")
 
-    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
+    def _draw_fallback(self, 
+                    window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw polylines and fallback to list of lines if backend not supported.
 
         :param window: The window to draw line to
         :param texture: The texture of the line
         :param width: Line width in pixels
+        :return self: The line itself
         """
         backend = window.backend_base.backend
-        if (not backend.LineBase.supports.line) and backend.LineBase.supports.polyline:
+        if backend.LineBase.supports.polyline:
             # If backend not supports line but supports polyline
             # Fall back to polyline if backend not supported
             PolyLine(self.points).draw(window, texture, width)
         else:
-            # Either draw the line or show not supported warning
-            LinePath.draw(self, window, texture, width)
+            LinePath._draw_fallback(self, window, texture, width)
         return self
 
     @property
@@ -143,15 +158,17 @@ class PolyLine(LinePath):
         #     )
 
 
-    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
+    def _draw_fallback(self, 
+                    window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw polylines and fallback to list of lines if backend not supported.
 
         :param window: The window to draw line to
         :param texture: The texture of the line
         :param width: Line width in pixels
+        :return self: The line itself
         """
         backend = window.backend_base.backend
-        if (not backend.LineBase.supports.polyline) and backend.LineBase.supports.line:
+        if backend.LineBase.supports.line:
             # If backend not supports polyline but supports line
             # Fall back to multiple lines if backend not supported
             lines: list[Line] = []
@@ -162,8 +179,7 @@ class PolyLine(LinePath):
             for line in lines:
                 line.draw(window, texture, width)
         else:
-            # Either draw the line or show not supported warning
-            LinePath.draw(self, window, texture, width)
+            LinePath._draw_fallback(self, window, texture, width)
         return self
 
     @property
@@ -207,20 +223,23 @@ class CircleArc(LinePath):
         y = self.center[1] + int(round(self.radius * math.sin(theta)))
         return (x, y)
 
-    def draw(self, window:Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
+    def _draw_fallback(self, 
+                    window:Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw the circle arc, convert to Bezier curves if backend does not support.
         
         :param window: The window to draw line to
         :param texture: The texture of the line
         :param width: Line width in pixels
+        :return self: The line itself
         """
-        if window.backend_base.backend.LineBase.supports.circle_arc:
-            LinePath.draw(self, window, texture, width)
-        else:
+        backend = window.backend_base.backend
+        if backend.LineBase.supports.cubic_bezier:
             # If backend reports circle arc not supported, then use cubic bezier to simulate
             beziers = self._arc_to_beziers()
             for bezier in beziers:
                 bezier.draw(window, texture, width)
+        else:
+            LinePath._draw_fallback(self, window, texture, width)
         return self
 
     def _arc_to_beziers(self) -> list[CubicBezier]:
@@ -351,16 +370,17 @@ class QuadraticBezier(LinePath):
     def end_point(self) -> Point:
         return self.points[-1]
     
-    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
+    def _draw_fallback(self, 
+                    window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw the quadratic Bezier, convert to cubic Bezier curves if backend does not support.
         
         :param window: The window to draw line to
         :param texture: The texture of the line
         :param width: Line width in pixels
+        :return self: The line itself
         """
-        if window.backend_base.backend.LineBase.supports.quadratic_bezier:
-            LinePath.draw(self, window, texture, width)
-        else:
+        backend = window.backend_base.backend
+        if backend.LineBase.supports.cubic_bezier:
             # Use cubic Beziers to express, vibed with ChatGPT
             p0, p1, p2 = self.points
             k = 2/3

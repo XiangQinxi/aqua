@@ -49,7 +49,7 @@ Size: typing.TypeAlias = tuple[int, int]
 # region Lines
 
 @dataclass
-class LinePath:
+class LinePath():
     """Base class of all line paths."""
 
     type: typing.ClassVar[str] = "line_path_class"
@@ -196,7 +196,7 @@ class CircleArc(LinePath):
         theta = math.radians(self.start_orient)
         x = self.center[0] + int(round(self.radius * math.cos(theta)))
         y = self.center[1] + int(round(self.radius * math.sin(theta)))
-        return x, y
+        return (x, y)
 
     @property
     def end_point(self) -> Point:
@@ -205,7 +205,7 @@ class CircleArc(LinePath):
         theta = math.radians(self.end_orient)
         x = self.center[0] + int(round(self.radius * math.cos(theta)))
         y = self.center[1] + int(round(self.radius * math.sin(theta)))
-        return x, y
+        return (x, y)
 
     def draw(self, window:Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw the circle arc, convert to Bezier curves if backend does not support.
@@ -277,7 +277,7 @@ class CircleArc(LinePath):
             cos0, sin0 = math.cos(t0), math.sin(t0)
             cos1, sin1 = math.cos(t1), math.sin(t1)
 
-            # For y cords, must use negative operations, because y-axis is reversed on a window
+            # For y coords, must use negative operations, because y-axis is reversed on a window
 
             # Endpoints
             x0: int = int(round(cx + self.radius * cos0, 0))
@@ -401,7 +401,7 @@ class CubicBezier(LinePath):
 
 class CharmyShapeError(Exception): ...
 
-class AnyShape:
+class AnyShape():
     """Base class of all shapes."""
     type: str = "any_shape"
 
@@ -533,7 +533,7 @@ class RoundRect(AnyShape):
 # region Drawn Lines / Shapes
 
 @dataclass
-class DrawnLine:
+class DrawnLine():
     """A class used to represent lines drawn to windows."""
     line: LinePath
     _texture: Texture
@@ -563,7 +563,7 @@ class DrawnLine:
 
 
 @dataclass
-class DrawnShape:
+class DrawnShape():
     """A Class used to represent shapes drawn to windows"""
     shape: AnyShape
     _texture: Texture

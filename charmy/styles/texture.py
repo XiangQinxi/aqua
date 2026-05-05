@@ -6,7 +6,7 @@ import typing
 
 # region Texture base class
 
-class Texture:
+class Texture():
     pass
 
 # endregion

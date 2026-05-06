@@ -69,21 +69,16 @@ class LinePath():
         :param texture: The texture of the line
         :param width: Line width in pixels
         """
-        window.backend_base.drawing_list.append(DrawnLine(self, texture, width))
+        # window.backend_base.drawing_list.append(DrawnLine(self, texture, width))
+        DrawnLine(self, texture, width).draw(window)
         return self
 
-    def _draw_fallback(self, 
-                    window: Window, texture: Texture | TextureLike, width: int = 5) -> list[LinePath]:
-        """Fallback ability of the line.
+    def fallback(self) -> typing.Sequence[LinePath]:
+        """Fallback ability of the line. For final fallback, warn that the line cannot be drawn.
 
-        :param window: The window to draw line to
-        :param texture: The texture of the line
-        :param width: Line width in pixels
-        :return self: The line itself
+        :return value: Alternative sequence of lines that represents or simulate the same line
         """
-        backend = window.backend_base.backend
-        warnings.warn(f"Line type {self.type} is not supported by "
-                              f"backend {backend.friendly_name}")
+        warnings.warn(f"Line type {self.type} could not be drawn in any alternative method.")
         return []
 
 
@@ -100,23 +95,14 @@ class Line(LinePath):
         if len(self.points) != 2:
             raise ValueError("A line must be defined with and only with 2 points.")
 
-    def _draw_fallback(self, 
-                    window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
-        """Draw polylines and fallback to list of lines if backend not supported.
+    def fallback(self) -> list[LinePath]:
+        """Convert line to single polyline.
 
-        :param window: The window to draw line to
-        :param texture: The texture of the line
-        :param width: Line width in pixels
-        :return self: The line itself
+        :return value: Alternative sequence of lines that represents or simulate the same line
         """
-        backend = window.backend_base.backend
-        if backend.LineBase.supports.polyline:
-            # If backend not supports line but supports polyline
-            # Fall back to polyline if backend not supported
-            PolyLine(self.points).draw(window, texture, width)
-        else:
-            LinePath._draw_fallback(self, window, texture, width)
-        return self
+        # If backend not supports line but supports polyline
+        # Fall back to polyline if backend not supported
+        return [PolyLine(self.points)]
 
     @property
     def start_point(self) -> Point:
@@ -145,29 +131,19 @@ class PolyLine(LinePath):
         #     )
 
 
-    def _draw_fallback(self, 
-                    window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
-        """Draw polylines and fallback to list of lines if backend not supported.
+    def fallback(self) -> typing.Sequence[LinePath]:
+        """Convert polyline to list of lines.
 
-        :param window: The window to draw line to
-        :param texture: The texture of the line
-        :param width: Line width in pixels
-        :return self: The line itself
+        :return value: Alternative sequence of lines that represents or simulate the same line
         """
-        backend = window.backend_base.backend
-        if backend.LineBase.supports.line:
-            # If backend not supports polyline but supports line
-            # Fall back to multiple lines if backend not supported
-            lines: list[Line] = []
-            for point_index in range(len(self.points)):
-                if point_index == 0:
-                    continue
-                lines.append(Line([self.points[point_index - 1], self.points[point_index]]))
-            for line in lines:
-                line.draw(window, texture, width)
-        else:
-            LinePath._draw_fallback(self, window, texture, width)
-        return self
+        # If backend not supports polyline but supports line
+        # Fall back to multiple lines if backend not supported
+        lines: list[Line] = []
+        for point_index in range(len(self.points)):
+            if point_index == 0:
+                continue
+            lines.append(Line([self.points[point_index - 1], self.points[point_index]]))
+        return lines
 
     @property
     def start_point(self) -> Point:
@@ -210,36 +186,18 @@ class CircleArc(LinePath):
         y = self.center[1] + int(round(self.radius * math.sin(theta)))
         return (x, y)
 
-    def _draw_fallback(self, 
-                    window:Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
-        """Draw the circle arc, convert to Bezier curves if backend does not support.
-        
-        :param window: The window to draw line to
-        :param texture: The texture of the line
-        :param width: Line width in pixels
-        :return self: The line itself
-        """
-        backend = window.backend_base.backend
-        if backend.LineBase.supports.cubic_bezier:
-            # If backend reports circle arc not supported, then use cubic bezier to simulate
-            beziers = self._arc_to_beziers()
-            for bezier in beziers:
-                bezier.draw(window, texture, width)
-        else:
-            LinePath._draw_fallback(self, window, texture, width)
-        return self
-
-    def _arc_to_beziers(self) -> list[CubicBezier]:
-        """Convert a circle arc into a list of cubic Bézier curves.
+    def fallback(self) -> typing.Sequence[LinePath]:
+        """Convert circle arc to Bezier curves.
 
         This function is vibed with ChatGPT.
 
         Coordinate system assumptions:
         - 0° is at the top (positive Y direction)
         - Angles increase clockwise
-
-        :return cubic_beziers: List of the cubic beziers
+        
+        :return value: Alternative sequence of lines that represents or simulate the same line
         """
+        # If backend reports circle arc not supported, then use cubic bezier to simulate
 
         cx, cy = self.center
 
@@ -357,29 +315,22 @@ class QuadraticBezier(LinePath):
     def end_point(self) -> Point:
         return self.points[-1]
     
-    def _draw_fallback(self, 
-                    window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
-        """Draw the quadratic Bezier, convert to cubic Bezier curves if backend does not support.
+    def fallback(self) -> typing.Sequence[LinePath]:
+        """Convert quadratic Bezier curves to cubic.
         
-        :param window: The window to draw line to
-        :param texture: The texture of the line
-        :param width: Line width in pixels
-        :return self: The line itself
+        :return value: Alternative sequence of lines that represents or simulate the same line
         """
-        backend = window.backend_base.backend
-        if backend.LineBase.supports.cubic_bezier:
-            # Use cubic Beziers to express, vibed with ChatGPT
-            p0, p1, p2 = self.points
-            k = 2/3
-            CubicBezier([
-                p0,
-                (int(round(p0[0] + k*(p1[0] - p0[0]), 0)), 
-                 int(round(p0[1] + k*(p1[1] - p0[1]), 0))),
-                (int(round(p2[0] + k*(p1[0] - p2[0]), 0)), 
-                 int(round(p2[1] + k*(p1[1] - p2[1]), 0))),
-                p2
-            ]).draw(window, texture, width)
-        return self
+        # Use cubic Beziers to express, vibed with ChatGPT
+        p0, p1, p2 = self.points
+        k = 2/3
+        return [CubicBezier([
+            p0,
+            (int(round(p0[0] + k*(p1[0] - p0[0]), 0)), 
+                int(round(p0[1] + k*(p1[1] - p0[1]), 0))),
+            (int(round(p2[0] + k*(p1[0] - p2[0]), 0)), 
+                int(round(p2[1] + k*(p1[1] - p2[1]), 0))),
+            p2
+        ])]
 
 @dataclass
 class CubicBezier(LinePath):
@@ -412,14 +363,14 @@ class AnyShape():
     """Base class of all shapes."""
     type: str = "any_shape"
 
-    def __init__(self, lines: list[LinePath]):
+    def __init__(self, lines: typing.Sequence[LinePath]):
         """To represent a shape.
 
         :param lines: List of lines forming the shape.
         """
         super().__init__()
 
-        self.lines: list[LinePath] = lines
+        self.lines: typing.Sequence[LinePath] = lines
 
         if not self._validate_lines():
             raise CharmyShapeError("Specified lines do not form a valid closed shape.")
@@ -465,7 +416,7 @@ class Rect(AnyShape):
         self.size: Size = size
 
     @property
-    def lines(self) -> list[LinePath]:
+    def lines(self) -> typing.Sequence[LinePath]:
         polyline = PolyLine([
             (self.position[0], self.position[1]), 
             (self.position[0] + self.size[0], self.position[1]), 
@@ -491,7 +442,7 @@ class RoundRect(AnyShape):
         self.radius: int | tuple[int, int, int, int] = radius
 
     @property
-    def lines(self) -> list[LinePath]:
+    def lines(self) -> typing.Sequence[LinePath]:
         radii: tuple[int, int, int, int]
         if isinstance(self.radius, int):
             radii = (self.radius, self.radius, self.radius, self.radius)
@@ -539,7 +490,6 @@ class RoundRect(AnyShape):
 
 # region Drawn Lines / Shapes
 
-@dataclass
 class DrawnLine():
     """A class used to represent lines drawn to windows."""
     line: LinePath
@@ -583,8 +533,10 @@ class DrawnLine():
                 window.backend_base.drawing_list.append(self)
                 # backend.LineBase.draw_line(self, window, texture)
             else:
-                warnings.warn(f"Line type {self.line.type} is not supported by "
-                              f"backend {backend.friendly_name}")
+                for fallback_line in self.line.fallback():
+                    fallback_line.draw(window, self.texture, self.width)
+                # warnings.warn(f"Line type {self.line.type} is not supported by "
+                #               f"backend {backend.friendly_name}")
         return self
 
 

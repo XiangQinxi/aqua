@@ -93,7 +93,11 @@ TransparentLike: typing.TypeAlias = None | tuple[int, int, int, typing.Literal[0
 TextureLike: typing.TypeAlias = ColorLike | TransparentLike
 
 def ensure_texture(texture_like: Texture | TextureLike) -> Texture:
-    """Convert TextureLike types into Texture objects."""
+    """Convert TextureLike types into Texture objects.
+
+    :param texture_like: The TextureLike value
+    :return texture: The converted Texture object.
+    """
     if isinstance(texture_like, Texture):
         result = texture_like
     else:

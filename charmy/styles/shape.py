@@ -72,6 +72,20 @@ class LinePath():
         window.backend_base.drawing_list.append(DrawnLine(self, texture, width))
         return self
 
+    def _draw_fallback(self, 
+                    window: Window, texture: Texture | TextureLike, width: int = 5) -> list[LinePath]:
+        """Fallback ability of the line.
+
+        :param window: The window to draw line to
+        :param texture: The texture of the line
+        :param width: Line width in pixels
+        :return self: The line itself
+        """
+        backend = window.backend_base.backend
+        warnings.warn(f"Line type {self.type} is not supported by "
+                              f"backend {backend.friendly_name}")
+        return []
+
 
 @dataclass
 class Line(LinePath):

@@ -4,7 +4,7 @@ This module implements Charmy's ability to express and draw lines and shapes.
 
 Lines
 -----
-Lines are devided into following types: lines for straight lines, polylines, circle arcs, ellipse 
+Lines are divided into following types: lines for straight lines, polylines, circle arcs, ellipse
 arcs (not implemented), quadratic Bezier curves and cubic Bezier curves.
 
 Each `LinePath` object can either be used to express a path, to be used to express a part of a 
@@ -15,7 +15,7 @@ and adjusted.
 
 Shapes
 ------
-In Charmy, all shapes can be expressed by a sequence of lines. Shapes are devided into following 
+In Charmy, all shapes can be expressed by a sequence of lines. Shapes are divided into following
 types: (...TO BE WRITTEN...). Backends that does not support drawing `any_shape` (line-sequence-
 expressed shapes) will be able to draw some of the other shape types directly using its drawing 
 module's API.
@@ -86,21 +86,22 @@ class Line(LinePath):
         if len(self.points) != 2:
             raise ValueError("A line must be defined with and only with 2 points.")
 
-    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
+    def _draw_fallback(self, 
+                    window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw polylines and fallback to list of lines if backend not supported.
 
         :param window: The window to draw line to
         :param texture: The texture of the line
         :param width: Line width in pixels
+        :return self: The line itself
         """
         backend = window.backend_base.backend
-        if (not backend.LineBase.supports.line) and backend.LineBase.supports.polyline:
+        if backend.LineBase.supports.polyline:
             # If backend not supports line but supports polyline
             # Fall back to polyline if backend not supported
             PolyLine(self.points).draw(window, texture, width)
         else:
-            # Either draw the line or show not supported warning
-            LinePath.draw(self, window, texture, width)
+            LinePath._draw_fallback(self, window, texture, width)
         return self
 
     @property
@@ -130,15 +131,17 @@ class PolyLine(LinePath):
         #     )
 
 
-    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
+    def _draw_fallback(self, 
+                    window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw polylines and fallback to list of lines if backend not supported.
 
         :param window: The window to draw line to
         :param texture: The texture of the line
         :param width: Line width in pixels
+        :return self: The line itself
         """
         backend = window.backend_base.backend
-        if (not backend.LineBase.supports.polyline) and backend.LineBase.supports.line:
+        if backend.LineBase.supports.line:
             # If backend not supports polyline but supports line
             # Fall back to multiple lines if backend not supported
             lines: list[Line] = []
@@ -149,8 +152,7 @@ class PolyLine(LinePath):
             for line in lines:
                 line.draw(window, texture, width)
         else:
-            # Either draw the line or show not supported warning
-            LinePath.draw(self, window, texture, width)
+            LinePath._draw_fallback(self, window, texture, width)
         return self
 
     @property
@@ -194,24 +196,27 @@ class CircleArc(LinePath):
         y = self.center[1] + int(round(self.radius * math.sin(theta)))
         return (x, y)
 
-    def draw(self, window:Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
+    def _draw_fallback(self, 
+                    window:Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw the circle arc, convert to Bezier curves if backend does not support.
         
         :param window: The window to draw line to
         :param texture: The texture of the line
         :param width: Line width in pixels
+        :return self: The line itself
         """
-        if window.backend_base.backend.LineBase.supports.circle_arc:
-            LinePath.draw(self, window, texture, width)
-        else:
+        backend = window.backend_base.backend
+        if backend.LineBase.supports.cubic_bezier:
             # If backend reports circle arc not supported, then use cubic bezier to simulate
             beziers = self._arc_to_beziers()
             for bezier in beziers:
                 bezier.draw(window, texture, width)
+        else:
+            LinePath._draw_fallback(self, window, texture, width)
         return self
 
     def _arc_to_beziers(self) -> list[CubicBezier]:
-        """Convert an circle arc into a list of cubic Bézier curves.
+        """Convert a circle arc into a list of cubic Bézier curves.
 
         This function is vibed with ChatGPT.
 
@@ -264,7 +269,7 @@ class CircleArc(LinePath):
             cos0, sin0 = math.cos(t0), math.sin(t0)
             cos1, sin1 = math.cos(t1), math.sin(t1)
 
-            # For y coods, must use negative operations, because y-axis is reversed on a window
+            # For y coords, must use negative operations, because y-axis is reversed on a window
 
             # Endpoints
             x0: int = int(round(cx + self.radius * cos0, 0))
@@ -338,16 +343,17 @@ class QuadraticBezier(LinePath):
     def end_point(self) -> Point:
         return self.points[-1]
     
-    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
+    def _draw_fallback(self, 
+                    window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
         """Draw the quadratic Bezier, convert to cubic Bezier curves if backend does not support.
         
         :param window: The window to draw line to
         :param texture: The texture of the line
         :param width: Line width in pixels
+        :return self: The line itself
         """
-        if window.backend_base.backend.LineBase.supports.quadratic_bezier:
-            LinePath.draw(self, window, texture, width)
-        else:
+        backend = window.backend_base.backend
+        if backend.LineBase.supports.cubic_bezier:
             # Use cubic Beziers to express, vibed with ChatGPT
             p0, p1, p2 = self.points
             k = 2/3
@@ -421,7 +427,7 @@ class AnyShape():
 
         :param window: The window to draw shape to
         :param texture: Texture within the shape
-        :param border_width: Width of border line in px, positive for outter and negative for inner
+        :param border_width: Width of borderline in px, positive for outer and negative for inner
         :param border_texture: Texture used on border
         """
         backend = window.backend_base.backend
@@ -491,7 +497,7 @@ class RoundRect(AnyShape):
                 (self.position[0] + self.size[0], 
                  self.position[1] + self.size[1] - radii[2]) # right-bottom
                 ]), 
-            CircleArc( # buttom-right corner
+            CircleArc( # bottom-right corner
                 (self.position[0] + self.size[0] - radii[2], 
                  self.position[1] + self.size[1] - radii[2]), 
                  radii[2], 90, 180
@@ -530,8 +536,7 @@ class DrawnLine():
         """Used to express lines drawn on GUI or canvas.
 
         :param line: The line (to be drawn)
-        :param texture: Texture of the drawn line
-        :param width: Line width
+        :param texture: Texture of the drawn line        :param width:  width
         """
         self.line = line
         self.texture = texture
@@ -583,7 +588,7 @@ class DrawnShape():
 
         :param shape: The shape (to be drawn)
         :param texture: Texture inside the drawn shape
-        :param border_width: Border width in px, positive for outter and negative for inner
+        :param border_width: Border width in px, positive for outer and negative for inner
         :param border_texture: Texture of the drawn border
         """
         self.shape = shape

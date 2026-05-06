@@ -62,20 +62,24 @@ class LinePath():
     def end_point(self) -> Point:
         raise NotImplementedError
 
-    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
+    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5, 
+             _fallback_from: list[type[LinePath]] = []) -> typing.Self:
         """Create DrawnLine object and draw the line.
 
         :param window: The window to draw line to
         :param texture: The texture of the line
         :param width: Line width in pixels
+        :param _fallback_from: Fallback path, for internal use
+        :return self: The LinePath object itself
         """
         # window.backend_base.drawing_list.append(DrawnLine(self, texture, width))
-        DrawnLine(self, texture, width).draw(window)
+        DrawnLine(self, texture, width).draw(window, _fallback_from)
         return self
 
-    def fallback(self) -> typing.Sequence[LinePath]:
+    def fallback(self, _from: list[type[LinePath]] = []) -> typing.Sequence[LinePath]:
         """Fallback ability of the line. For final fallback, warn that the line cannot be drawn.
 
+        :param _from: Fallback path, for internal use
         :return value: Alternative sequence of lines that represents or simulate the same line
         """
         warnings.warn(f"Line type {self.type} could not be drawn in any alternative method.")
@@ -95,14 +99,18 @@ class Line(LinePath):
         if len(self.points) != 2:
             raise ValueError("A line must be defined with and only with 2 points.")
 
-    def fallback(self) -> list[LinePath]:
+    def fallback(self, _from: list[type[LinePath]] = []) -> typing.Sequence[LinePath]:
         """Convert line to single polyline.
 
+        :param _from: Fallback path, for internal use
         :return value: Alternative sequence of lines that represents or simulate the same line
         """
         # If backend not supports line but supports polyline
         # Fall back to polyline if backend not supported
-        return [PolyLine(self.points)]
+        if PolyLine not in _from:
+            return [PolyLine(self.points)]
+        else:
+            return LinePath.fallback(self, [*_from, self.__class__])
 
     @property
     def start_point(self) -> Point:
@@ -130,20 +138,23 @@ class PolyLine(LinePath):
         #         stacklevel=2
         #     )
 
-
-    def fallback(self) -> typing.Sequence[LinePath]:
+    def fallback(self, _from: list[type[LinePath]] = []) -> typing.Sequence[LinePath]:
         """Convert polyline to list of lines.
 
+        :param _from: Fallback path, for internal use
         :return value: Alternative sequence of lines that represents or simulate the same line
         """
         # If backend not supports polyline but supports line
         # Fall back to multiple lines if backend not supported
-        lines: list[Line] = []
-        for point_index in range(len(self.points)):
-            if point_index == 0:
-                continue
-            lines.append(Line([self.points[point_index - 1], self.points[point_index]]))
-        return lines
+        if Line not in _from:
+            lines: list[Line] = []
+            for point_index in range(len(self.points)):
+                if point_index == 0:
+                    continue
+                lines.append(Line([self.points[point_index - 1], self.points[point_index]]))
+            return lines
+        else:
+            return LinePath.fallback(self, [*_from, self.__class__])
 
     @property
     def start_point(self) -> Point:
@@ -186,7 +197,7 @@ class CircleArc(LinePath):
         y = self.center[1] + int(round(self.radius * math.sin(theta)))
         return (x, y)
 
-    def fallback(self) -> typing.Sequence[LinePath]:
+    def fallback(self, _from: list[type[LinePath]] = []) -> typing.Sequence[LinePath]:
         """Convert circle arc to Bezier curves.
 
         This function is vibed with ChatGPT.
@@ -194,78 +205,82 @@ class CircleArc(LinePath):
         Coordinate system assumptions:
         - 0° is at the top (positive Y direction)
         - Angles increase clockwise
-        
+
+        :param _from: Fallback path, for internal use
         :return value: Alternative sequence of lines that represents or simulate the same line
         """
-        # If backend reports circle arc not supported, then use cubic bezier to simulate
+        if CubicBezier not in _from:
+            # If backend reports circle arc not supported, then use cubic bezier to simulate
 
-        cx, cy = self.center
+            cx, cy = self.center
 
-        # --- Convert custom angle system to standard math radians ---
-        # Math system: 0 rad at +X axis, CCW positive
-        def to_math_rad(deg: float) -> float:
-            return math.radians(90 - deg)
+            # --- Convert custom angle system to standard math radians ---
+            # Math system: 0 rad at +X axis, CCW positive
+            def to_math_rad(deg: float) -> float:
+                return math.radians(90 - deg)
 
-        start = to_math_rad(self.start_orient)
-        end = to_math_rad(self.end_orient)
+            start = to_math_rad(self.start_orient)
+            end = to_math_rad(self.end_orient)
 
-        # --- Ensure clockwise traversal ---
-        # In math coordinates, clockwise means decreasing angle
-        delta = end - start
-        if delta > 0:
-            delta -= 2 * math.pi
+            # --- Ensure clockwise traversal ---
+            # In math coordinates, clockwise means decreasing angle
+            delta = end - start
+            if delta > 0:
+                delta -= 2 * math.pi
 
-        # Clamp to at most one full circle
-        if delta < -2 * math.pi:
-            delta = -2 * math.pi
+            # Clamp to at most one full circle
+            if delta < -2 * math.pi:
+                delta = -2 * math.pi
 
-        # # Handle full circles
-        # if self.start_orient == self.end_orient:
-        #     delta = -2 * math.pi
+            # # Handle full circles
+            # if self.start_orient == self.end_orient:
+            #     delta = -2 * math.pi
 
-        # --- Split into segments (max 90° each) ---
-        max_step = math.pi / 2
-        segments = max(1, int(math.ceil(abs(delta) / max_step)))
-        step = delta / segments
+            # --- Split into segments (max 90° each) ---
+            max_step = math.pi / 2
+            segments = max(1, int(math.ceil(abs(delta) / max_step)))
+            step = delta / segments
 
-        beziers: list[CubicBezier] = []
+            beziers: list[CubicBezier] = []
 
-        for i in range(segments):
-            t0 = start + i * step
-            t1 = start + (i + 1) * step
-            dt = t1 - t0
+            for i in range(segments):
+                t0 = start + i * step
+                t1 = start + (i + 1) * step
+                dt = t1 - t0
 
-            # Cubic Bézier approximation factor
-            alpha = 4 / 3 * math.tan(dt / 4)
+                # Cubic Bézier approximation factor
+                alpha = 4 / 3 * math.tan(dt / 4)
 
-            cos0, sin0 = math.cos(t0), math.sin(t0)
-            cos1, sin1 = math.cos(t1), math.sin(t1)
+                cos0, sin0 = math.cos(t0), math.sin(t0)
+                cos1, sin1 = math.cos(t1), math.sin(t1)
 
-            # For y coords, must use negative operations, because y-axis is reversed on a window
+                # For y coords, must use negative operations, because y-axis is reversed on a window
 
-            # Endpoints
-            x0: int = int(round(cx + self.radius * cos0, 0))
-            y0: int = int(round(cy - self.radius * sin0, 0))
+                # Endpoints
+                x0: int = int(round(cx + self.radius * cos0, 0))
+                y0: int = int(round(cy - self.radius * sin0, 0))
 
-            x3: int = int(round(cx + self.radius * cos1, 0))
-            y3: int = int(round(cy - self.radius * sin1, 0))
+                x3: int = int(round(cx + self.radius * cos1, 0))
+                y3: int = int(round(cy - self.radius * sin1, 0))
 
-            # Tangent directions
-            dx0, dy0 = -sin0, cos0
-            dx1, dy1 = -sin1, cos1
+                # Tangent directions
+                dx0, dy0 = -sin0, cos0
+                dx1, dy1 = -sin1, cos1
 
-            # Control points
-            x1: int = int(round(x0 + alpha * self.radius * dx0, 0))
-            y1: int = int(round(y0 - alpha * self.radius * dy0, 0))
+                # Control points
+                x1: int = int(round(x0 + alpha * self.radius * dx0, 0))
+                y1: int = int(round(y0 - alpha * self.radius * dy0, 0))
 
-            x2: int = int(round(x3 - alpha * self.radius * dx1))
-            y2: int = int(round(y3 + alpha * self.radius * dy1))
+                x2: int = int(round(x3 - alpha * self.radius * dx1))
+                y2: int = int(round(y3 + alpha * self.radius * dy1))
 
-            beziers.append(
-                CubicBezier([(x0, y0), (x1, y1), (x2, y2), (x3, y3)])
-                )
+                beziers.append(
+                    CubicBezier([(x0, y0), (x1, y1), (x2, y2), (x3, y3)])
+                    )
 
-        return beziers
+            return beziers
+        else:
+            return LinePath.fallback(self, [*_from, self.__class__])
 
 @dataclass
 class EllipseArc(LinePath):
@@ -315,22 +330,26 @@ class QuadraticBezier(LinePath):
     def end_point(self) -> Point:
         return self.points[-1]
     
-    def fallback(self) -> typing.Sequence[LinePath]:
+    def fallback(self, _from: list[type[LinePath]] = []) -> typing.Sequence[LinePath]:
         """Convert quadratic Bezier curves to cubic.
-        
+
+        :param _from: Fallback path, for internal use
         :return value: Alternative sequence of lines that represents or simulate the same line
         """
-        # Use cubic Beziers to express, vibed with ChatGPT
-        p0, p1, p2 = self.points
-        k = 2/3
-        return [CubicBezier([
-            p0,
-            (int(round(p0[0] + k*(p1[0] - p0[0]), 0)), 
-                int(round(p0[1] + k*(p1[1] - p0[1]), 0))),
-            (int(round(p2[0] + k*(p1[0] - p2[0]), 0)), 
-                int(round(p2[1] + k*(p1[1] - p2[1]), 0))),
-            p2
-        ])]
+        if CubicBezier not in _from:
+            # Use cubic Beziers to express, vibed with ChatGPT
+            p0, p1, p2 = self.points
+            k = 2/3
+            return [CubicBezier([
+                p0,
+                (int(round(p0[0] + k*(p1[0] - p0[0]), 0)), 
+                    int(round(p0[1] + k*(p1[1] - p0[1]), 0))),
+                (int(round(p2[0] + k*(p1[0] - p2[0]), 0)), 
+                    int(round(p2[1] + k*(p1[1] - p2[1]), 0))),
+                p2
+            ])]
+        else:
+            return LinePath.fallback(self, [*_from, self.__class__])
 
 @dataclass
 class CubicBezier(LinePath):
@@ -395,11 +414,7 @@ class AnyShape():
         :param border_width: Width of borderline in px, positive for outer and negative for inner
         :param border_texture: Texture used on border
         """
-        backend = window.backend_base.backend
-        if self.type in backend.ShapeBase.supports or "any_shape" in backend.ShapeBase.supports:
-            window.backend_base.drawing_list.append(
-                DrawnShape(self, texture, border_width, border_texture)
-                )
+        DrawnShape(self, texture, border_width, border_texture).draw(window)
         return self
 
 class Rect(AnyShape):
@@ -518,9 +533,10 @@ class DrawnLine():
             # Convert into texture
             self._texture = _ensure_texture(new_texture)
 
-    def draw(self, window: Window) -> typing.Self:
+    def draw(self, window: Window, _fallback_from: list[type[LinePath]] = []) -> typing.Self:
         """Draw the line.
 
+        :param _fallback_from: Fallback path, for internal use
         :param window: The window to draw line to
         """
         backend = window.backend_base.backend
@@ -533,14 +549,15 @@ class DrawnLine():
                 window.backend_base.drawing_list.append(self)
                 # backend.LineBase.draw_line(self, window, texture)
             else:
-                for fallback_line in self.line.fallback():
-                    fallback_line.draw(window, self.texture, self.width)
+                _fallback_from.append(self.line.__class__)
+                for fallback_line in self.line.fallback(_from = _fallback_from):
+                    fallback_line.draw(window, self.texture, self.width, 
+                                       _fallback_from=_fallback_from)
                 # warnings.warn(f"Line type {self.line.type} is not supported by "
                 #               f"backend {backend.friendly_name}")
         return self
 
 
-@dataclass
 class DrawnShape():
     """A Class used to represent shapes drawn to windows"""
     shape: AnyShape
@@ -585,5 +602,18 @@ class DrawnShape():
         else:
             # Convert into texture
             self._border_texture = _ensure_texture(new_texture)
+
+    def draw(self, window: Window) -> typing.Self:
+        """Draw the shape using backend.
+
+        :param window: The window to draw shape to
+        :param texture: Texture within the shape
+        :param border_width: Width of borderline in px, positive for outer and negative for inner
+        :param border_texture: Texture used on border
+        """
+        backend = window.backend_base.backend
+        if self.shape.type in backend.ShapeBase.supports or "any_shape" in backend.ShapeBase.supports:
+            window.backend_base.drawing_list.append(self)
+        return self
 
 # endregion

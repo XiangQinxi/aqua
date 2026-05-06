@@ -54,29 +54,6 @@ class LinePath():
 
     type: typing.ClassVar[str] = "line_path_class"
 
-    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
-        """Draw the line.
-
-        :param window: The window to draw line to
-        :param texture: The texture of the line
-        :param width: Line width in pixels
-        """
-        backend = window.backend_base.backend
-        # 👆 Alias to avoid path to backend properties getting too long. 😅
-        if self.type == "line_path_class":
-            raise TypeError("LinePath class is a template, cannot be drawn.")
-        else:
-            if self.type in backend.LineBase.supports:
-                # If supported by the windows' backend.
-                window.backend_base.drawing_list.append(
-                    DrawnLine(self, texture, width)
-                    )
-                # backend.LineBase.draw_line(self, window, texture)
-            else:
-                warnings.warn(f"Line type {self.type} is not supported by "
-                              f"backend {backend.friendly_name}")
-        return self
-
     @property
     def start_point(self) -> Point:
         raise NotImplementedError
@@ -84,6 +61,16 @@ class LinePath():
     @property
     def end_point(self) -> Point:
         raise NotImplementedError
+
+    def draw(self, window: Window, texture: Texture | TextureLike, width: int = 5) -> typing.Self:
+        """Create DrawnLine object and draw the line.
+
+        :param window: The window to draw line to
+        :param texture: The texture of the line
+        :param width: Line width in pixels
+        """
+        window.backend_base.drawing_list.append(DrawnLine(self, texture, width))
+        return self
 
 
 @dataclass
@@ -561,6 +548,25 @@ class DrawnLine():
         else:
             # Convert into texture
             self._texture = _ensure_texture(new_texture)
+
+    def draw(self, window: Window) -> typing.Self:
+        """Draw the line.
+
+        :param window: The window to draw line to
+        """
+        backend = window.backend_base.backend
+        # 👆 Alias to avoid path to backend properties getting too long. 😅
+        if self.line.type == "line_path_class":
+            raise TypeError("LinePath class is a template, cannot be drawn.")
+        else:
+            if self.line.type in backend.LineBase.supports:
+                # If supported by the windows' backend.
+                window.backend_base.drawing_list.append(self)
+                # backend.LineBase.draw_line(self, window, texture)
+            else:
+                warnings.warn(f"Line type {self.line.type} is not supported by "
+                              f"backend {backend.friendly_name}")
+        return self
 
 
 @dataclass
